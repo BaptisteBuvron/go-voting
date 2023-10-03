@@ -12,3 +12,9 @@ func TieBreak(alts []Alternative) (alt Alternative, err error) {
 	alt = alts[0]
 	return
 }
+
+func TieBreakFactory(orderedAlts []Alternative) func([]Alternative) (Alternative, error) {
+	return func(alts []Alternative) (Alternative, error) {
+		return TieBreak(alts)
+	}
+}

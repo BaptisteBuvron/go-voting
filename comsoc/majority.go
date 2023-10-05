@@ -1,5 +1,6 @@
 package comsoc
 
+//TODO TEST
 func MajoritySWF(p Profile) (count Count, err error) {
 	err = checkProfile(p)
 	if err != nil {
@@ -15,6 +16,7 @@ func MajoritySWF(p Profile) (count Count, err error) {
 	return
 }
 
+//TODO TEST
 func MajoritySCF(p Profile) (bestAlts []Alternative, err error) {
 	count, err := MajoritySWF(p)
 	if err != nil {

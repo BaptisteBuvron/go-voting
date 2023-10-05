@@ -38,4 +38,6 @@ func TestCondorcetWinner(t *testing.T) {
 	if len(bestAlts) != 0 {
 		t.Errorf("Error: %s", err)
 	}
+
+	// Todo tester avec une égalité non strict
 }

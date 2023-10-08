@@ -2,7 +2,8 @@ package comsoc
 
 //TODO TEST
 func MajoritySWF(p Profile) (count Count, err error) {
-	err = checkProfile(p)
+	count = make(Count, 0)
+	err = CheckProfile(p)
 	if err != nil {
 		return
 	}
@@ -10,18 +11,9 @@ func MajoritySWF(p Profile) (count Count, err error) {
 		if len(alts) != 0 {
 			alt := alts[0]
 			count[alt] += 1
-			break
 		}
 	}
 	return
 }
 
-//TODO TEST
-func MajoritySCF(p Profile) (bestAlts []Alternative, err error) {
-	count, err := MajoritySWF(p)
-	if err != nil {
-		return
-	}
-	bestAlts = maxCount(count)
-	return
-}
+var MajoritySCF = SWF2SCF(MajoritySWF)

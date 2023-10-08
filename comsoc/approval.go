@@ -1,7 +1,7 @@
 package comsoc
 
 func ApprovalSWF(p Profile, thresholds []int) (count Count, err error) {
-	err = checkProfile(p)
+	err = CheckProfile(p)
 	if err != nil {
 		return
 	}
@@ -19,6 +19,6 @@ func ApprovalSCF(p Profile, thresholds []int) (bestAlts []Alternative, err error
 	if err != nil {
 		return
 	}
-	bestAlts = maxCount(count)
+	bestAlts = MaxCount(count)
 	return
 }

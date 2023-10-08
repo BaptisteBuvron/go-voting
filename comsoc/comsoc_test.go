@@ -12,7 +12,7 @@ func TestCheckProfile(t *testing.T) {
 		[]Alternative{1, 2, 0},
 		[]Alternative{2, 0, 1},
 	}
-	err = checkProfile(prefs1)
+	err = CheckProfile(prefs1)
 	if err != nil {
 		t.Errorf("Error: %s", err)
 	}
@@ -22,7 +22,7 @@ func TestCheckProfile(t *testing.T) {
 		[]Alternative{1, 2, 0},
 		[]Alternative{2, 2, 3},
 	}
-	err = checkProfile(prefs2)
+	err = CheckProfile(prefs2)
 	if err == nil {
 		t.Errorf("Error: %s", err)
 	}
@@ -32,7 +32,7 @@ func TestCheckProfile(t *testing.T) {
 		[]Alternative{1, 2, 0},
 		[]Alternative{2, 0, 3},
 	}
-	err = checkProfile(prefs3)
+	err = CheckProfile(prefs3)
 	if err == nil {
 		t.Errorf("Error: %s", err)
 	}
@@ -40,7 +40,7 @@ func TestCheckProfile(t *testing.T) {
 	prefs4 := Profile{
 		[]Alternative{0, 1, 3},
 	}
-	err = checkProfile(prefs4)
+	err = CheckProfile(prefs4)
 	if err == nil {
 		t.Errorf("Error: %s", err)
 	}

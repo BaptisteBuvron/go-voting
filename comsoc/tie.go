@@ -37,10 +37,10 @@ func TieBreakFactory(orderedAlts []Alternative) func([]Alternative) (Alternative
 }
 
 // les SWF doivent renvoyer un ordre total sans égalité
-//TODO TEST
+// TODO TEST
 func SWFFactory(swf func(p Profile) (Count, error), tb func([]Alternative) (Alternative, error)) func(Profile) ([]Alternative, error) {
 	return func(p Profile) ([]Alternative, error) {
-		err := checkProfile(p);
+		err := CheckProfile(p)
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +62,7 @@ func SWFFactory(swf func(p Profile) (Count, error), tb func([]Alternative) (Alte
 				// On renvoie vrai si le premier est préféré
 				return res == Alternative(i)
 			}
-			return alt1 > alt2	
+			return alt1 > alt2
 		})
 		// Renvoyer les alternatives dans l'ordre
 		var alts []Alternative
@@ -74,7 +74,7 @@ func SWFFactory(swf func(p Profile) (Count, error), tb func([]Alternative) (Alte
 
 }
 
-//TODO TEST
+// TODO TEST
 func SCFFactory(scf func(p Profile) ([]Alternative, error), tb func([]Alternative) (Alternative, error)) func(Profile) (Alternative, error) {
 	return func(p Profile) (Alternative, error) {
 		bestAlts, err := scf(p)

@@ -12,7 +12,7 @@ func CondorcetWinner(p Profile) (bestAlts []Alternative, err error) {
 	// on initialise le tableau de comptage
 	m := make(map[Alternative]int)
 	// on vérifie que le profil est complet
-	err = checkProfile(p)
+	err = CheckProfile(p)
 	if err != nil {
 		return bestAlts, err
 	}
@@ -22,7 +22,7 @@ func CondorcetWinner(p Profile) (bestAlts []Alternative, err error) {
 		for j := 0; j < len(p[0]); j++ {
 			if i != j {
 				for k := 0; k < len(p); k++ {
-					if isPref(Alternative(i), Alternative(j), p[k]) {
+					if IsPref(Alternative(i), Alternative(j), p[k]) {
 						m[Alternative(i)]++
 					}
 				}

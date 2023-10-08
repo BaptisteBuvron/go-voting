@@ -10,7 +10,7 @@ type Profile [][]Alternative
 type Count map[Alternative]int
 
 // renvoie l'indice ou se trouve alt dans prefs
-func rank(alt Alternative, prefs []Alternative) int {
+func Rank(alt Alternative, prefs []Alternative) int {
 	for index, pref := range prefs {
 		if alt == pref {
 			return index
@@ -19,13 +19,13 @@ func rank(alt Alternative, prefs []Alternative) int {
 	return -1
 }
 
-// renvoie vrai ssi alt1 est preferee a alt2
-func isPref(alt1, alt2 Alternative, prefs []Alternative) bool {
-	return rank(alt1, prefs) < rank(alt2, prefs)
+// renvoie vrai ssi alt1 est préférée a alt2
+func IsPref(alt1, alt2 Alternative, prefs []Alternative) bool {
+	return Rank(alt1, prefs) < Rank(alt2, prefs)
 }
 
-// renvoie les meilleures alternatives pour un decomtpe donne
-func maxCount(count Count) (bestAlts []Alternative) {
+// renvoie les meilleures alternatives pour un décompte donne
+func MaxCount(count Count) (bestAlts []Alternative) {
 	max := 0
 	for alt, total := range count {
 		if total > max {
@@ -39,7 +39,7 @@ func maxCount(count Count) (bestAlts []Alternative) {
 }
 
 // verifie le profil donne, par ex. qu'ils sont tous complets et que chaque alternative n'apparait qu'une seule fois par preferences
-func checkProfile(prefs Profile) error {
+func CheckProfile(prefs Profile) error {
 	var size int = -1
 	for _, alternative := range prefs {
 		alts := make(map[Alternative]int)
@@ -65,11 +65,11 @@ func checkProfile(prefs Profile) error {
 }
 
 // verifie le profil donne, par ex. qu'ils sont tous complets et que chaque alternative de alts apparait exactement une fois par preferences
-func checkProfileAlternative(prefs Profile, alts []Alternative) error {
+func CheckProfileAlternative(prefs Profile, alts []Alternative) error {
 	for voter, pref := range prefs {
 		missing := make(map[Alternative]bool, len(alts))
 		for _, alt := range alts {
-			missing[alt] = true;
+			missing[alt] = true
 		}
 		for index, alt := range pref {
 			if missing[alt] {
@@ -79,10 +79,21 @@ func checkProfileAlternative(prefs Profile, alts []Alternative) error {
 			}
 		}
 		for alt, isMissing := range missing {
-			if (isMissing) {
+			if isMissing {
 				return fmt.Errorf("Missing alternative %d on voter %d", alt, voter)
 			}
 		}
 	}
 	return nil
+}
+
+func SWF2SCF(swf func(p Profile) (count Count, err error)) func(p Profile) (bestAlts []Alternative, err error) {
+	return func(p Profile) (bestAlts []Alternative, err error) {
+		count, err := swf(p)
+		if err != nil {
+			return
+		}
+		bestAlts = MaxCount(count)
+		return
+	}
 }

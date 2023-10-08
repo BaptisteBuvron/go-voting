@@ -1,7 +1,7 @@
 package comsoc
 
 func BordaSWF(p Profile) (count Count, err error) {
-	err = checkProfile(p)
+	err = CheckProfile(p)
 	if err != nil {
 		return
 	}
@@ -13,11 +13,4 @@ func BordaSWF(p Profile) (count Count, err error) {
 	return
 }
 
-func BordaSCF(p Profile) (bestAlts []Alternative, err error) {
-	count, err := BordaSWF(p)
-	if err != nil {
-		return
-	}
-	bestAlts = maxCount(count)
-	return
-}
+var BordaSCF = SWF2SCF(BordaSWF)

@@ -1,9 +1,11 @@
 package agt
 
+import "net/http"
+
 const (
-	ErrorAlreadyVoted  = 1
-	ErrorVoterNotFound = 2
-	ErrorDeadline      = 3
+	ErrorAlreadyVoted  = http.StatusForbidden
+	ErrorVoterNotFound = http.StatusBadRequest
+	ErrorDeadline      = http.StatusServiceUnavailable
 )
 
 type Error struct {
@@ -13,4 +15,8 @@ type Error struct {
 
 func (e Error) Error() string {
 	return e.Message
+}
+
+func (e Error) StatusCode() int {
+	return e.Code
 }

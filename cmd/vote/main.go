@@ -1,11 +1,6 @@
 package main
 
-import (
-	"tp3/agt"
-	"tp3/comsoc"
-)
-
-func main() {
+/*func main() {
 	profile := comsoc.Profile{
 		[]comsoc.Alternative{0, 1, 2},
 		[]comsoc.Alternative{1, 2, 0},
@@ -18,4 +13,4 @@ func main() {
 	scf := comsoc.MajoritySCF
 	tb := comsoc.TieBreakFactory(alts)
 	agt.RunSystemDeVoteFromProfile(profile, comsoc.SCFFactory(scf, tb))
-}
+}*/

@@ -2,19 +2,20 @@ package agt
 
 import (
 	"fmt"
+	"net/http"
 	"time"
-	"tp3/agt"
 	"tp3/comsoc"
 )
 
 // https://en.wikipedia.org/wiki/Ballot
 type BallotAgent struct {
-	rule 	 string
-	deadline   time.Time
-	voters	 []string
+	rule           string
+	deadline       time.Time
+	voters         []string
 	alternativesNb int
-	votted	 []string
-	profiles   comsoc.Profile
+	tieBreak       []int
+	votted         []string
+	profiles       comsoc.Profile
 }
 
 type BallotAgentI interface {
@@ -22,12 +23,11 @@ type BallotAgentI interface {
 }
 
 func NewBallotAgent(request RequestNewBallot) *BallotAgent {
-	return &BallotAgent{request.Rule, time.Now(), request.Voters, request.Alternatives, nil, nil}
+	deadline, _ := time.Parse(time.RFC3339, request.Deadline)
+	return &BallotAgent{request.Rule, deadline, request.Voters, request.Alternatives, request.TieBreak, nil, nil}
 }
 
-
-
-func (b *BallotAgent) addVoter(vote RequestVote) (err error) {
+func (b *BallotAgent) addVoter(vote RequestVote) (err Error) {
 	//verif if voter exists in voters
 	exists := false
 	for _, v := range b.voters {
@@ -36,17 +36,21 @@ func (b *BallotAgent) addVoter(vote RequestVote) (err error) {
 		}
 	}
 	if !exists {
-		return agt.Error{agt.ErrorVoterNotFound, fmt.Sprintf("Voter %s not found", vote.AgentID)}
+		return Error{ErrorVoterNotFound, fmt.Sprintf("Voter %s not found", vote.AgentID)}
 	}
 	//verif if voter already voted
 	for _, v := range b.votted {
 		if v == vote.AgentID {
-			return agt.Error{agt.ErrorAlreadyVoted, fmt.Sprintf("Voter %s already voted", vote.AgentID)}
+			return Error{ErrorAlreadyVoted, fmt.Sprintf("Voter %s already voted", vote.AgentID)}
 		}
 	}
 	//verify the deadline
 	if time.Now().After(b.deadline) {
-		return agt.Error{agt.ErrorDeadline, fmt.Sprintf("Deadline %s is passed", b.deadline)}
+		return Error{ErrorDeadline, fmt.Sprintf("Deadline %s is passed", b.deadline)}
+	}
+	//verify if the number of alternatives is correct
+	if len(vote.Prefs) != b.alternativesNb {
+		return Error{http.StatusBadRequest, fmt.Sprintf("The number of alternatives is incorrect")}
 	}
 	b.votted = append(b.votted, vote.AgentID)
 	// convert []int to []comsoc.Alternative

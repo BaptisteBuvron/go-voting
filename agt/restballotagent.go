@@ -19,7 +19,8 @@ type RestServerAgent struct {
 }
 
 func NewRestServerAgent(addr string) *RestServerAgent {
-	return &RestServerAgent{id: addr, addr: addr}
+	ballots := make(map[string]*BallotAgent)
+	return &RestServerAgent{id: addr, addr: addr, ballots: ballots}
 }
 
 // Test de la méthode
@@ -77,11 +78,23 @@ func (rsa *RestServerAgent) doNewBallot(req RequestNewBallot, res Response) {
 	ballotAgent := NewBallotAgent(req)
 	rsa.ballots[voteName] = ballotAgent
 	responseNewBallot := ResponseNewBallot{BallotID: voteName}
+	fmt.Println(voteName + " created")
 	res(http.StatusCreated, responseNewBallot)
 }
 
 func (rsa *RestServerAgent) doVote(req RequestVote, res Response) {
-	res(http.StatusOK, RequestVote{})
+	voteId := req.VoteID
+	ballotAgent, ok := rsa.ballots[voteId]
+	if !ok {
+		res(http.StatusBadRequest, ResponseMessage{Message: fmt.Sprintf("Vote %s not found", voteId)})
+		return
+	}
+	err := ballotAgent.addVoter(req)
+	if err.Code != 0 {
+		res(err.Code, ResponseMessage{Message: err.Error()})
+		return
+	}
+	res(http.StatusOK, ResponseMessage{Message: ""})
 }
 
 func (rsa *RestServerAgent) doResult(req RequestResult, res Response) {

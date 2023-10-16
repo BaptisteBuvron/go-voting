@@ -1,17 +1,6 @@
 package agt
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
-	"tp3/comsoc"
-)
-
+/*
 type RestClientAgent struct {
 	id    string
 	url   string
@@ -101,3 +90,4 @@ func (rca *RestClientAgent) Start() {
 		log.Printf("[%s] %d %s %d = %d\n", rca.id, rca.arg1, rca.operator, rca.arg2, res)
 	}
 }
+*/

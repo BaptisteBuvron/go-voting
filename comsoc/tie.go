@@ -48,30 +48,25 @@ func SWFFactory(swf func(p Profile) (Count, error), tb func([]Alternative) (Alte
 		if err != nil {
 			return nil, err
 		}
-		// Classer les counts en fonction du tie break
-		//TODO TEST
-		sort.SliceStable(count, func(i, j int) bool {
-			alt1 := count[Alternative(i)]
-			alt2 := count[Alternative(j)]
-			if alt1 == alt2 {
-				// A partir du tie break on classe le premier et le second
-				res, err := TieBreak([]Alternative{Alternative(i), Alternative(j)})
-				if err != nil {
-					panic(err)
-				}
-				// On renvoie vrai si le premier est préféré
-				return res == Alternative(i)
-			}
-			return alt1 > alt2
-		})
-		// Renvoyer les alternatives dans l'ordre
+		// Classer les counts en fonction du tie break en cas d'égalité, sinon tu peux grand au plus petit
 		var alts []Alternative
-		for _, c := range count {
-			alts = append(alts, Alternative(c))
+		for alt, _ := range count {
+			alts = append(alts, alt)
 		}
+
+		// Utiliser le tie break pour ordonner les alternatives en cas d'égalité
+		sort.Slice(alts, func(i, j int) bool {
+			// Utiliser le tie break uniquement en cas d'égalité
+			if count[alts[i]] == count[alts[j]] {
+				tbResult, _ := tb([]Alternative{alts[i], alts[j]})
+				return tbResult == alts[i] // Inverser l'ordre ici
+			}
+			// Si pas d'égalité, ordonner par le nombre de voix
+			return count[alts[i]] > count[alts[j]]
+		})
+
 		return alts, nil
 	}
-
 }
 
 // TODO TEST

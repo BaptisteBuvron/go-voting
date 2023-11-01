@@ -71,6 +71,12 @@ func route[Request any](method string, do func(Request, Response)) func(w http.R
 }
 
 func (rsa *RestServerAgent) doNewBallot(req RequestNewBallot, res Response) {
+	//verify if the request is valid
+	requestValid, err := isRequestNewBallotValid(req)
+	if !requestValid {
+		res(http.StatusBadRequest, ResponseMessage{Message: err.Error()})
+		return
+	}
 	rsa.Lock()
 	defer rsa.Unlock()
 	rsa.reqCount++

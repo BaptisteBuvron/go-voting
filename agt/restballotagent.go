@@ -89,21 +89,37 @@ func (rsa *RestServerAgent) doNewBallot(req RequestNewBallot, res Response) {
 }
 
 func (rsa *RestServerAgent) doVote(req RequestVote, res Response) {
+
+	//verify if the request is valid
+	requestValid, err := isRequestVoteValid(req)
+	if !requestValid {
+		res(http.StatusBadRequest, ResponseMessage{Message: err.Error()})
+		return
+	}
+
 	voteId := req.VoteID
 	ballotAgent, ok := rsa.ballots[voteId]
 	if !ok {
 		res(http.StatusBadRequest, ResponseMessage{Message: fmt.Sprintf("Vote %s not found", voteId)})
 		return
 	}
-	err := ballotAgent.addVoter(req)
-	if err.Code != 0 {
-		res(err.Code, ResponseMessage{Message: err.Error()})
+	errAddVoter := ballotAgent.addVoter(req)
+	if errAddVoter.Code != 0 {
+		res(errAddVoter.Code, ResponseMessage{Message: errAddVoter.Error()})
 		return
 	}
 	res(http.StatusOK, ResponseMessage{Message: ""})
 }
 
 func (rsa *RestServerAgent) doResult(req RequestResult, res Response) {
+
+	//verify if the request is valid
+	requestValid, err := isRequestResultValid(req)
+	if !requestValid {
+		res(http.StatusBadRequest, ResponseMessage{Message: err.Error()})
+		return
+	}
+
 	res(http.StatusOK, ResponseMessage{Message: ""})
 }
 

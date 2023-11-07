@@ -47,11 +47,39 @@ type RequestVote struct {
 	AgentID string `json:"agent-id"`
 	VoteID  string `json:"ballot-id"`
 	Prefs   []int  `json:"prefs"`
-	Options []int  `json:"options"`
+	Options []int  `json:"options"` //Optional
+}
+
+func isRequestVoteValid(req RequestVote) (bool, error) {
+	// Check if the AgentID is set
+	if req.AgentID == "" {
+		return false, fmt.Errorf("AgentID is not set")
+	}
+
+	// Check if the VoteID is set
+	if req.VoteID == "" {
+		return false, fmt.Errorf("VoteID is not set")
+	}
+
+	// Check if the Prefs is set
+	if len(req.Prefs) == 0 {
+		return false, fmt.Errorf("Prefs is not set")
+	}
+
+	return true, nil
 }
 
 type RequestResult struct {
 	BallotID string `json:"ballot-id"`
+}
+
+func isRequestResultValid(req RequestResult) (bool, error) {
+	// Check if the BallotID is set
+	if req.BallotID == "" {
+		return false, fmt.Errorf("BallotID is not set")
+	}
+
+	return true, nil
 }
 
 type ResponseResult struct {

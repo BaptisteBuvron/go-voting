@@ -1,10 +1,10 @@
 package comsoc
 
 import (
-	"fmt"
-	"reflect"
 	"testing"
 )
+
+var dummyProfile = Profile{[]Alternative{0}}
 
 func mockSWF(p Profile) (Count, error) {
 	count := Count{
@@ -15,50 +15,36 @@ func mockSWF(p Profile) (Count, error) {
 	return count, nil
 }
 
-func mockTieBreak(alt []Alternative) (Alternative, error) {
-	return TieBreakFactory([]Alternative{Alternative(2), Alternative(0), Alternative(1)})(alt)
-}
-
 func TestSWFFactory(t *testing.T) {
-	// Arrange
-	factory := SWFFactory(mockSWF, mockTieBreak)
-	expectedResult := []Alternative{Alternative(2), Alternative(0), Alternative(1)}
+	assert := Assert{t}
+
+	// Create swf
+	tb := TieBreakFactory(Alts(2, 0, 1))
+	swf := SWFFactory(mockSWF, tb)
 
 	// Act
-	result, err := factory(Profile{})
-	fmt.Println(result)
+	got, err := swf(dummyProfile) // fake profile
 
-	// Assert
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	// Check if the result is sorted correctly
-	if !reflect.DeepEqual(result, expectedResult) {
-		t.Errorf("Result does not match expected order. Got %v, expected %v", result, expectedResult)
-	}
+	// Check result
+	assert.NoError(err)
+	assert.DeepEqual(got, Alts(2, 0, 1))
 }
 
 func mockSCF(p Profile) ([]Alternative, error) {
 	// For simplicity, returning a fixed set of alternatives
-	return []Alternative{Alternative(0), Alternative(1), Alternative(2)}, nil
+	return Alts(0, 1, 2), nil
 }
 
 func TestSCFFactory(t *testing.T) {
-	// Arrange
-	factory := SCFFactory(mockSCF, mockTieBreak)
-	expectedResult := Alternative(2)
+	assert := Assert{t}
 
+	// Create scf
+	tb := TieBreakFactory(Alts(2, 0, 1))
+	scf := SCFFactory(mockSCF, tb)
 	// Act
-	result, err := factory(Profile{})
+	got, err := scf(dummyProfile) // fake profile
 
-	// Assert
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	// Check if the result matches the expected alternative
-	if !reflect.DeepEqual(result, expectedResult) {
-		t.Errorf("Result does not match expected alternative. Got %v, expected %v", result, expectedResult)
-	}
+	// Check result
+	assert.NoError(err)
+	assert.DeepEqual(got, Alternative(2))
 }

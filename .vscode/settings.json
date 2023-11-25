@@ -1,0 +1,22 @@
+{
+    // Don't format on save for formatters we don't explicitely control
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": false
+    },
+    // Set file associations to support comments syntax highlight
+    "files.associations": {
+      "settings.json": "jsonc",
+    },
+    "editor.rulers": [100],
+    "cSpell.language": "fr,en",
+    "cSpell.words": [
+      "apparait",
+      "comsoc",
+      "n'apparait",
+      "prefs",
+      "Prefs"
+    ],
+    "go.testFlags": ["-v"]
+  }
+  

@@ -5,27 +5,26 @@ import (
 )
 
 func TestCheckProfile(t *testing.T) {
-	var err error
-	//Should succeed
+	assert := Assert{t}
+
+	// Should succeed
 	prefs1 := Profile{
 		[]Alternative{0, 1, 2},
 		[]Alternative{1, 2, 0},
 		[]Alternative{2, 0, 1},
 	}
-	err = CheckProfile(prefs1)
-	if err != nil {
-		t.Errorf("Error: %s", err)
-	}
-	//Should fail
+	err := CheckProfile(prefs1)
+	assert.NoError(err)
+
+	// Should fail
 	prefs2 := Profile{
 		[]Alternative{0, 1, 2},
 		[]Alternative{1, 2, 0},
 		[]Alternative{2, 2, 3},
 	}
 	err = CheckProfile(prefs2)
-	if err == nil {
-		t.Errorf("Error: %s", err)
-	}
+	assert.Error(err)
+
 	//Should fail
 	prefs3 := Profile{
 		[]Alternative{0, 1, 2},
@@ -33,15 +32,12 @@ func TestCheckProfile(t *testing.T) {
 		[]Alternative{2, 0, 3},
 	}
 	err = CheckProfile(prefs3)
-	if err == nil {
-		t.Errorf("Error: %s", err)
-	}
-	//Should fail
+	assert.Error(err)
+
+	// Should fail (eeuuuhh non ?)
 	prefs4 := Profile{
 		[]Alternative{0, 1, 3},
 	}
 	err = CheckProfile(prefs4)
-	if err == nil {
-		t.Errorf("Error: %s", err)
-	}
+	assert.Error(err)
 }

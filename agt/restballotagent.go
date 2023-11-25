@@ -47,6 +47,7 @@ func respondJSON(w http.ResponseWriter, statuscode int, value any) {
 
 type Response = func(statuscode int, value any)
 
+// Create a request handler by deserialize the request and send it to the inner function
 func route[Request any](method string, do func(Request, Response)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Check if method is valid

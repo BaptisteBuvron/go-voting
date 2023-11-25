@@ -1,11 +1,12 @@
 package comsoc
 
 import (
-	"reflect"
 	"testing"
 )
 
 func TestMajoritySWF(t *testing.T) {
+	assert := Assert{t}
+
 	// Test case 1: Valid profile
 	validProfile := Profile{
 		[]Alternative{0, 1, 2},
@@ -15,40 +16,22 @@ func TestMajoritySWF(t *testing.T) {
 	expectedCount := Count{
 		0: 2,
 		1: 1,
+		2: 0,
 	}
-
 	count, err := MajoritySWF(validProfile)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	if !reflect.DeepEqual(count, expectedCount) {
-		t.Errorf("Expected count %v, but got %v", expectedCount, count)
-	}
+	assert.NoError(err)
+	assert.DeepEqual(count, expectedCount)
 
 	// Test case MajoritySCF
 	expectedBestAlts := []Alternative{0}
 	bestAlts, err := MajoritySCF(validProfile)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	if !reflect.DeepEqual(bestAlts, expectedBestAlts) {
-		t.Errorf("Expected best alternatives %v, but got %v", expectedBestAlts, bestAlts)
-	}
+	assert.NoError(err)
+	assert.DeepEqual(bestAlts, expectedBestAlts)
 
 	// Test case  Empty profile
 	emptyProfile := Profile{}
-	expectedEmptyCount := Count{}
-
-	emptyCount, emptyErr := MajoritySWF(emptyProfile)
-	if emptyErr != nil {
-		t.Errorf("Unexpected error for empty profile: %v", emptyErr)
-	}
-
-	if !reflect.DeepEqual(emptyCount, expectedEmptyCount) {
-		t.Errorf("Expected empty count %v, but got %v", expectedEmptyCount, emptyCount)
-	}
+	_, emptyErr := MajoritySWF(emptyProfile)
+	assert.Error(emptyErr) // TODO discuss empty fail
 
 	// Test case equality
 	equalityProfile := Profile{
@@ -63,17 +46,13 @@ func TestMajoritySWF(t *testing.T) {
 	}
 
 	equalityCount, equalityErr := MajoritySWF(equalityProfile)
-	if equalityErr != nil {
-		t.Errorf("Unexpected error for equality profile: %v", equalityErr)
-	}
-
-	if !reflect.DeepEqual(equalityCount, expectedEqualityCount) {
-		t.Errorf("Expected equality count %v, but got %v", expectedEqualityCount, equalityCount)
-	}
-
+	assert.NoError(equalityErr)
+	assert.DeepEqual(equalityCount, expectedEqualityCount)
 }
 
 func TestMajoritySCF(t *testing.T) {
+	assert := Assert{t}
+
 	// Test case 1: Valid profile
 	validProfile := Profile{
 		[]Alternative{0, 1, 2},
@@ -84,11 +63,6 @@ func TestMajoritySCF(t *testing.T) {
 	// Test case MajoritySCF
 	expectedBestAlts := []Alternative{0}
 	bestAlts, err := MajoritySCF(validProfile)
-	if err != nil {
-		t.Errorf("Unexpected error: %v", err)
-	}
-
-	if !reflect.DeepEqual(bestAlts, expectedBestAlts) {
-		t.Errorf("Expected best alternatives %v, but got %v", expectedBestAlts, bestAlts)
-	}
+	assert.NoError(err)
+	assert.DeepEqual(bestAlts, expectedBestAlts)
 }

@@ -1,43 +1,45 @@
 package comsoc
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestCondorcetWinner(t *testing.T) {
-	//0 est le gagnant de Condorcet
+	assert := Assert{t}
+
+	// 0 est le gagnant de Condorcet
 	prefs1 := Profile{
 		[]Alternative{0, 1, 2},
 		[]Alternative{0, 2, 1},
 		[]Alternative{2, 1, 0},
 	}
+	// 0 win against 2 and 1
+	// 2 win against 1
 	bestAlts, err := CondorcetWinner(prefs1)
-	if err != nil {
-		t.Errorf("Error: %s", err)
-	}
-	fmt.Println(bestAlts)
-	if len(bestAlts) != 1 {
-		t.Errorf("Error: %s", err)
-	}
-	if bestAlts[0] != 0 {
-		t.Errorf("Error: %s", err)
-	}
+	assert.NoError(err)
+	assert.DeepEqual(bestAlts, Alts(0))
 
-	//Il n'y a pas de gagnant de Condorcet
+	// No Condorcet Winner
 	prefs2 := Profile{
 		[]Alternative{0, 1, 2},
 		[]Alternative{1, 2, 0},
 		[]Alternative{2, 0, 1},
 	}
 	bestAlts, err = CondorcetWinner(prefs2)
-	if err != nil {
-		t.Errorf("Error: %s", err)
-	}
-	fmt.Println(bestAlts)
-	if len(bestAlts) != 0 {
-		t.Errorf("Error: %s", err)
-	}
+	assert.NoError(err)
+	assert.Empty(bestAlts)
 
-	// Todo tester avec une égalité non strict
+	// No Condorcet Winner
+	prefs3 := Profile{
+		[]Alternative{0, 2, 1},
+		[]Alternative{0, 2, 1},
+		[]Alternative{0, 2, 1},
+		[]Alternative{2, 1, 0},
+		[]Alternative{2, 1, 0},
+		[]Alternative{1, 2, 0},
+	}
+	// 2 win against 1
+	bestAlts, err = CondorcetWinner(prefs3)
+	assert.NoError(err)
+	assert.Empty(bestAlts)
 }

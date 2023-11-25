@@ -2,7 +2,7 @@ package agt
 
 import (
 	"fmt"
-	"tp3/comsoc"
+	"ia04/comsoc"
 )
 
 type VoterAgent struct {

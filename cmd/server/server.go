@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"tp3/agt"
+	"ia04/agt"
 )
 
 func main() {

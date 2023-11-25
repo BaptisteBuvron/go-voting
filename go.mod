@@ -1,3 +1,3 @@
-module tp3
+module ia04
 
-go 1.21.0
+go 1.21

@@ -2,9 +2,9 @@ package agt
 
 import (
 	"fmt"
+	"ia04/comsoc"
 	"net/http"
 	"time"
-	"tp3/comsoc"
 )
 
 // https://en.wikipedia.org/wiki/Ballot
@@ -14,7 +14,7 @@ type BallotAgent struct {
 	voters         []string
 	alternativesNb int
 	tieBreak       []int
-	votted         []string
+	voted          []string
 	profiles       comsoc.Profile
 }
 
@@ -39,7 +39,7 @@ func (b *BallotAgent) addVoter(vote RequestVote) (err Error) {
 		return Error{ErrorVoterNotFound, fmt.Sprintf("Voter %s not found", vote.AgentID)}
 	}
 	//verif if voter already voted
-	for _, v := range b.votted {
+	for _, v := range b.voted {
 		if v == vote.AgentID {
 			return Error{ErrorAlreadyVoted, fmt.Sprintf("Voter %s already voted", vote.AgentID)}
 		}
@@ -52,7 +52,7 @@ func (b *BallotAgent) addVoter(vote RequestVote) (err Error) {
 	if len(vote.Prefs) != b.alternativesNb {
 		return Error{http.StatusBadRequest, fmt.Sprintf("The number of alternatives is incorrect")}
 	}
-	b.votted = append(b.votted, vote.AgentID)
+	b.voted = append(b.voted, vote.AgentID)
 	// convert []int to []comsoc.Alternative
 	prefs := make([]comsoc.Alternative, len(vote.Prefs))
 	for i, pref := range vote.Prefs {

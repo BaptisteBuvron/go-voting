@@ -14,15 +14,15 @@ Install [Go](https://golang.org/doc/install).
 Clone the repository:
 
 ```bash
-go install github.com/BaptisteBuvron/go-voting/cmd/client@v0.1.0
-go install github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
+go install github.com/BaptisteBuvron/go-voting/cmd/client@v1.0.0
+go install github.com/BaptisteBuvron/go-voting/cmd/server@v1.0.0
 ```
 
 Run the server:
 
 ```bash
 server
-//go run github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
+# go run github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
 ```
 
 Example commands for client:
@@ -57,13 +57,13 @@ Pendant l'utilisation de l'API certaines erreures peuvent se produire. Voici la 
 - Requête : `POST`
 - Objet `JSON` envoyé
 
-| propriété   | type           | exemple de valeurs possibles                                |
-|-------------|----------------|-------------------------------------------------------------|
-| `rule`      | `string`       | `"majority"`,`"borda"`, `"approval"`, `"stv"`, `"copeland"` |
-| `deadline`  | `string`       | `"2023-10-09T23:05:08+02:00"`  (format RFC 3339)            |
-| `voter-ids` | `[string,...]` | `["ag_id1", "ag_id2", "ag_id3"]`                            |
-| `#alts`     | `int`          | `12`                                                        |
-| `tie-break` | `[int,...]`.   | `[4, 2, 3, 5, 9, 8, 7, 1, 6, 11, 12, 10]`                   |
+| propriété   | type           | exemple de valeurs possibles                                            |
+|-------------|----------------|-------------------------------------------------------------------------|
+| `rule`      | `string`       | `"majority"`,`"borda"`, `"approval"`, `"stv"`, `"copeland"`, `"kemeny"` |
+| `deadline`  | `string`       | `"2023-10-09T23:05:08+02:00"`  (format RFC 3339)                        |
+| `voter-ids` | `[string,...]` | `["ag_id1", "ag_id2", "ag_id3"]`                                        |
+| `#alts`     | `int`          | `12`                                                                    |
+| `tie-break` | `[int,...]`.   | `[4, 2, 3, 5, 9, 8, 7, 1, 6, 11, 12, 10]`                               |
 
 *Remarques :* la deadline représente la date de fin de vote. Pour celle-ci, utiliser la bibliothèque standard de `Go`, en particulier le package `time`. La propriété `#alts` représente le nombre d'alternatives, numérotées de 1 à `#alts`.
 

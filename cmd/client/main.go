@@ -21,7 +21,7 @@ func main() {
 	switch os.Args[2] {
 	case "new_ballot":
 		if len(argv) != 5 {
-			fmt.Fprintln(os.Stderr, "SYNTAX: client VOTER_ID new_ballot {majority,borda,stv,approval,copeland} DEADLINE VOTERS ALTS TIE_BREAK")
+			fmt.Fprintln(os.Stderr, "SYNTAX: client VOTER_ID new_ballot {majority,borda,stv,approval,copeland,kemeny} DEADLINE VOTERS ALTS TIE_BREAK")
 			os.Exit(1)
 		}
 		ballotId, err := client.CreateBallot(

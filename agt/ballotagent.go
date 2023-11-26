@@ -116,7 +116,7 @@ func (b *BallotAgent) Vote(voterId string, alts []comsoc.Alternative, options []
 func (b *BallotAgent) result() (comsoc.Alternative, []comsoc.Alternative, error) {
 	// Check if vote is over
 	if b.deadline.After(time.Now()) {
-		return comsoc.Alternative(-1), nil, comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline is not over come back at %v", b.deadline)
+		return 0, nil, comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline is not over come back at %v", b.deadline)
 	}
 	// Get scf
 	var scf comsoc.SCF
@@ -136,7 +136,7 @@ func (b *BallotAgent) result() (comsoc.Alternative, []comsoc.Alternative, error)
 	}
 	results, err := scf(b.profiles)
 	if err != nil {
-		return comsoc.Alternative(-1), nil, err
+		return 0, nil, err
 	}
 	// apply tie break
 	winner, err := b.tieBreak(results)

@@ -62,7 +62,7 @@ func CheckAlternatives(alts []Alternative, size int) error {
 	}
 
 	// Verify that all alternatives are present (depending on the size of the profile)
-	for i := 0; i < size; i++ {
+	for i := 1; i <= size; i++ {
 		alt := Alternative(i)
 		if !meetAlts[alt] {
 			return HTTPErrorf(http.StatusBadRequest, "Missing alternative at %d", alt)
@@ -162,7 +162,7 @@ type ScoreEvaluator func(int, int) int
 // ref: https://www.hds.utc.fr/~lagruesy/ens/ia04/02-Prise%20de%20d%c3%a9cision%20collective%20et%20th%c3%a9orie%20du%20choix%20social/#33
 func ScoringSWFFactory(evaluator ScoreEvaluator) SWF {
 	return func(p Profile) (Count, error) {
-		count := make(Count, 0)
+		count := CountFor(p)
 		err := CheckProfile(p)
 		if err != nil {
 			return nil, err

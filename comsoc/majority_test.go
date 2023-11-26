@@ -9,21 +9,21 @@ func TestMajoritySWF(t *testing.T) {
 
 	// Test case 1: Valid profile
 	validProfile := Profile{
-		[]Alternative{0, 1, 2},
-		[]Alternative{1, 2, 0},
-		[]Alternative{0, 2, 1},
+		[]Alternative{1, 2, 3},
+		[]Alternative{2, 3, 1},
+		[]Alternative{1, 3, 2},
 	}
 	expectedCount := Count{
-		0: 2,
-		1: 1,
-		2: 0,
+		1: 2,
+		2: 1,
+		3: 0,
 	}
 	count, err := MajoritySWF(validProfile)
 	assert.NoError(err)
 	assert.DeepEqual(count, expectedCount)
 
 	// Test case MajoritySCF
-	expectedBestAlts := []Alternative{0}
+	expectedBestAlts := []Alternative{1}
 	bestAlts, err := MajoritySCF(validProfile)
 	assert.NoError(err)
 	assert.DeepEqual(bestAlts, expectedBestAlts)
@@ -31,18 +31,18 @@ func TestMajoritySWF(t *testing.T) {
 	// Test case  Empty profile
 	emptyProfile := Profile{}
 	_, emptyErr := MajoritySWF(emptyProfile)
-	assert.Error(emptyErr) // TODO discuss empty fail
+	assert.Error(emptyErr) // TODO discuss empty fail(We need to support it)
 
 	// Test case equality
 	equalityProfile := Profile{
-		[]Alternative{0, 1, 2},
-		[]Alternative{1, 2, 0},
-		[]Alternative{2, 0, 1},
+		[]Alternative{1, 2, 3},
+		[]Alternative{2, 3, 1},
+		[]Alternative{3, 1, 2},
 	}
 	expectedEqualityCount := Count{
-		0: 1,
 		1: 1,
 		2: 1,
+		3: 1,
 	}
 
 	equalityCount, equalityErr := MajoritySWF(equalityProfile)
@@ -55,13 +55,13 @@ func TestMajoritySCF(t *testing.T) {
 
 	// Test case 1: Valid profile
 	validProfile := Profile{
-		[]Alternative{0, 1, 2},
-		[]Alternative{1, 2, 0},
-		[]Alternative{0, 2, 1},
+		[]Alternative{1, 2, 3},
+		[]Alternative{2, 3, 1},
+		[]Alternative{1, 3, 2},
 	}
 
 	// Test case MajoritySCF
-	expectedBestAlts := []Alternative{0}
+	expectedBestAlts := []Alternative{1}
 	bestAlts, err := MajoritySCF(validProfile)
 	assert.NoError(err)
 	assert.DeepEqual(bestAlts, expectedBestAlts)

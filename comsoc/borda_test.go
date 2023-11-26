@@ -8,32 +8,32 @@ func TestBordaSWF(t *testing.T) {
 	assert := Assert{t}
 
 	profile1 := Profile{
-		[]Alternative{0, 1, 2},
-		[]Alternative{1, 0, 2},
-		[]Alternative{2, 1, 0},
+		[]Alternative{1, 2, 3},
+		[]Alternative{2, 1, 3},
+		[]Alternative{3, 2, 1},
 	}
 
-	expectedCout := Count{
-		0: 3,
-		1: 4,
-		2: 2,
+	expectedCount := Count{
+		1: 3,
+		2: 4,
+		3: 2,
 	}
 
 	count, err := BordaSWF(profile1)
 	assert.NoError(err)
-	assert.DeepEqual(count, expectedCout)
+	assert.DeepEqual(count, expectedCount)
 }
 
 func TestBordaSCF(t *testing.T) {
 	assert := Assert{t}
 
 	profile1 := Profile{
-		[]Alternative{0, 1, 2},
-		[]Alternative{1, 0, 2},
-		[]Alternative{2, 1, 0},
+		[]Alternative{1, 2, 3},
+		[]Alternative{2, 1, 3},
+		[]Alternative{3, 2, 1},
 	}
 
 	bestAlts, err := BordaSCF(profile1)
 	assert.NoError(err)
-	assert.DeepEqual(bestAlts, []Alternative{1})
+	assert.DeepEqual(bestAlts, []Alternative{2})
 }

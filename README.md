@@ -26,8 +26,8 @@ go run ia04/cmd/server
 Example commands for client:
 
 ```bash
-go run ia04/cmd/client v1 new_ballot majority '2023-11-26T16:27:11+00:00' 'v1,v2,v3' 5 '0,1,2,3,4'
-go run ia04/cmd/client v1 vote majority-18c0c24a3245e '0,1,2,3,4'
+go run ia04/cmd/client v1 new_ballot majority '2023-11-26T16:27:11+00:00' 'v1,v2,v3' 5 '1,2,3,4,5'
+go run ia04/cmd/client v1 vote majority-18c0c24a3245e '4,2,3,1,5'
 go run ia04/cmd/client v1 result majority-18c0c24a3245e
 ```
 

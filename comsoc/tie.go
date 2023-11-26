@@ -12,7 +12,7 @@ type TieBreak func([]Alternative) (Alternative, error)
 // Take the first candidate.
 func TieBreakFirstOne(alts []Alternative) (Alternative, error) {
 	if len(alts) == 0 {
-		return Alternative(-1), HTTPErrorf(http.StatusBadRequest, "Empty alternatives")
+		return 0, HTTPErrorf(http.StatusBadRequest, "Empty alternatives")
 	}
 	return alts[0], nil
 }
@@ -20,7 +20,7 @@ func TieBreakFirstOne(alts []Alternative) (Alternative, error) {
 // Take the highest candidate (for be more determinist).
 func TieBreakHighest(alts []Alternative) (Alternative, error) {
 	if len(alts) == 0 {
-		return Alternative(-1), HTTPErrorf(http.StatusBadRequest, "Empty alternatives")
+		return 0, HTTPErrorf(http.StatusBadRequest, "Empty alternatives")
 	}
 	maxAlt := alts[0]
 	for _, alt := range alts {
@@ -36,7 +36,7 @@ func TieBreakFactory(orderedAlts []Alternative) TieBreak {
 	return func(alts []Alternative) (Alternative, error) {
 		// Check if at least one candidate
 		if len(orderedAlts) == 0 {
-			return -1, errors.New("Empty alternatives")
+			return 0, errors.New("Empty alternatives")
 		}
 		maxIndex := len(orderedAlts)
 		maxAlt := alts[0]
@@ -98,11 +98,11 @@ func SCFFactory(scf SCF, tb TieBreak) SCFWithTieBreak {
 	return func(p Profile) (Alternative, error) {
 		bestAlts, err := scf(p)
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 		bestAlt, err := tb(bestAlts)
 		if err != nil { // If error, bestAlt must be -1
-			return -1, err
+			return 0, err
 		}
 		return bestAlt, err
 	}

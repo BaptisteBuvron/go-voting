@@ -50,7 +50,7 @@ func TestProfileKendallTauDistance(t *testing.T) {
 	p1 := Profile{[]Alternative{2, 1, 3, 4}}
 	p2 := Profile{[]Alternative{2, 1, 4, 3}}
 	p3 := Profile{[]Alternative{4, 2, 3, 1}}
-	assert.Equal(ProfileKendallTauDistance(alts, p1), uint64(1))
-	assert.Equal(ProfileKendallTauDistance(alts, p2), uint64(2))
-	assert.Equal(ProfileKendallTauDistance(alts, p3), uint64(5))
+	assert.Equal(ProfileKendallTauDistance(alts, p1), 1)
+	assert.Equal(ProfileKendallTauDistance(alts, p2), 2)
+	assert.Equal(ProfileKendallTauDistance(alts, p3), 5)
 }

@@ -1,6 +1,9 @@
 package agt
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type RequestNewBallot struct {
 	Rule         string   `json:"rule"`
@@ -19,6 +22,12 @@ func isRequestNewBallotValid(req RequestNewBallot) (bool, error) {
 	// Check if the Deadline is set
 	if req.Deadline == "" {
 		return false, fmt.Errorf("Deadline is not set")
+	}
+
+	//check if the deadline is valid (RFC3339)
+	_, err := time.Parse(time.RFC3339, req.Deadline)
+	if err != nil {
+		return false, fmt.Errorf("Invalid deadline")
 	}
 
 	// Check if at least one voter is present
@@ -65,6 +74,8 @@ func isRequestVoteValid(req RequestVote) (bool, error) {
 	if len(req.Prefs) == 0 {
 		return false, fmt.Errorf("Prefs is not set")
 	}
+
+	// Options is optional
 
 	return true, nil
 }

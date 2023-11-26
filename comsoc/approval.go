@@ -7,6 +7,7 @@ func ApprovalSWF(p Profile, thresholds []int) (count Count, err error) {
 	if err != nil {
 		return
 	}
+	count = CountFor(p)
 	for voter, alts := range p {
 		for i := 0; i < thresholds[voter]; i++ {
 			alt := alts[i]

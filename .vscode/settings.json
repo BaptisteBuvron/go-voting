@@ -1,7 +1,4 @@
 {
-    "editor.codeActionsOnSave": {
-      "source.fixAll": false
-    },
     // Set file associations to support comments syntax highlight
     "files.associations": {
       "settings.json": "jsonc",
@@ -11,9 +8,12 @@
     "cSpell.words": [
       "apparait",
       "comsoc",
+      "copeland",
+      "coverprofile",
+      "ints",
       "n'apparait",
       "prefs",
-      "Prefs"
+      "statuscode"
     ],
     "go.testFlags": ["-v"]
   }

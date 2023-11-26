@@ -3,27 +3,21 @@ package agt
 import (
 	"fmt"
 	"ia04/comsoc"
+	"reflect"
 )
 
+// ID for agent
 type AgentID int
 
+// Agent structure
 type Agent struct {
 	ID    AgentID
 	Name  string
 	Prefs []comsoc.Alternative
 }
 
-type AgentI interface {
-	Equal(ag AgentI) bool
-	DeepEqual(ag AgentI) bool
-	Clone() AgentI
-	String() string
-	Prefers(a comsoc.Alternative, b comsoc.Alternative) bool
-	Start()
-}
-
-// Méthode Equal
-func (a *Agent) Equal(ag AgentI) bool {
+// Compare an agent based on his id
+func (a *Agent) Equal(ag any) bool {
 	otherAgent, ok := ag.(*Agent)
 	if !ok {
 		return false
@@ -31,23 +25,27 @@ func (a *Agent) Equal(ag AgentI) bool {
 	return a.ID == otherAgent.ID
 }
 
-func (a *Agent) DeepEqual(ag AgentI) bool {
+// Deeply compare and agent
+func (a *Agent) DeepEqual(ag any) bool {
 	otherAgent, ok := ag.(*Agent)
 	if !ok {
 		return false
 	}
-	return a.ID == otherAgent.ID && a.Name == otherAgent.Name
+	return a.ID == otherAgent.ID && a.Name == otherAgent.Name && reflect.DeepEqual(a.Prefs, otherAgent.Prefers)
 }
 
-func (a *Agent) Clone() AgentI {
+// Clone an agent
+func (a *Agent) Clone() Agent {
 	clone := *a
-	return &clone
+	return clone
 }
 
+// represent an agent
 func (a *Agent) String() string {
 	return fmt.Sprintf("<Agent ID: %d Name: %s Prefs: %d>", a.ID, a.Name, a.Prefs)
 }
 
+// Ask agent his preferences
 func (ag *Agent) Prefers(a comsoc.Alternative, b comsoc.Alternative) bool {
 	return comsoc.IsPref(a, b, ag.Prefs)
 }

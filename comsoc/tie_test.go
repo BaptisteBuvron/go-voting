@@ -19,7 +19,7 @@ func TestSWFFactory(t *testing.T) {
 	assert := Assert{t}
 
 	// Create swf
-	tb := TieBreakFactory(Alts(2, 0, 1))
+	tb := TieBreakFactory([]Alternative{2, 0, 1})
 	swf := SWFFactory(mockSWF, tb)
 
 	// Act
@@ -27,19 +27,19 @@ func TestSWFFactory(t *testing.T) {
 
 	// Check result
 	assert.NoError(err)
-	assert.DeepEqual(got, Alts(2, 0, 1))
+	assert.DeepEqual(got, []Alternative{2, 0, 1})
 }
 
 func mockSCF(p Profile) ([]Alternative, error) {
 	// For simplicity, returning a fixed set of alternatives
-	return Alts(0, 1, 2), nil
+	return []Alternative{0, 1, 2}, nil
 }
 
 func TestSCFFactory(t *testing.T) {
 	assert := Assert{t}
 
 	// Create scf
-	tb := TieBreakFactory(Alts(2, 0, 1))
+	tb := TieBreakFactory([]Alternative{2, 0, 1})
 	scf := SCFFactory(mockSCF, tb)
 	// Act
 	got, err := scf(dummyProfile) // fake profile

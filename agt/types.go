@@ -1,92 +1,43 @@
 package agt
 
-import "fmt"
+import (
+	"ia04/comsoc"
+	"time"
+)
 
+// Request for [POST] /new_ballot
 type RequestNewBallot struct {
-	Rule         string   `json:"rule"`
-	Deadline     string   `json:"deadline"`
-	Voters       []string `json:"voter-ids"`
-	Alternatives int      `json:"#alts"`
-	TieBreak     []int    `json:"tie-break"`
+	Rule         string               `json:"rule"`
+	Deadline     time.Time            `json:"deadline"`
+	Voters       []string             `json:"voter-ids"`
+	Alternatives int                  `json:"#alts"`
+	TieBreak     []comsoc.Alternative `json:"tie-break"`
 }
 
-func isRequestNewBallotValid(req RequestNewBallot) (bool, error) {
-	// Check if the Rule is set
-	if req.Rule == "" {
-		return false, fmt.Errorf("Rule is not set")
-	}
-
-	// Check if the Deadline is set
-	if req.Deadline == "" {
-		return false, fmt.Errorf("Deadline is not set")
-	}
-
-	// Check if at least one voter is present
-	if len(req.Voters) == 0 {
-		return false, fmt.Errorf("No voters specified")
-	}
-
-	// Check if the number of alternatives is valid
-	if req.Alternatives <= 0 {
-		return false, fmt.Errorf("Invalid number of alternatives")
-	}
-
-	// Check if TieBreak is set and has at least one element
-	if len(req.TieBreak) == 0 {
-		return false, fmt.Errorf("TieBreak is not set")
-	}
-
-	return true, nil
-}
-
+// Response for [POST] /new_ballot
 type ResponseNewBallot struct {
 	BallotID string `json:"ballot-id"`
 }
 
+// Request for [POST] /vote
 type RequestVote struct {
-	AgentID string `json:"agent-id"`
-	VoteID  string `json:"ballot-id"`
-	Prefs   []int  `json:"prefs"`
-	Options []int  `json:"options"` //Optional
+	AgentID  string               `json:"agent-id"`
+	BallotID string               `json:"ballot-id"`
+	Prefs    []comsoc.Alternative `json:"prefs"`
+	Options  []int                `json:"options"` //Optional
 }
 
-func isRequestVoteValid(req RequestVote) (bool, error) {
-	// Check if the AgentID is set
-	if req.AgentID == "" {
-		return false, fmt.Errorf("AgentID is not set")
-	}
-
-	// Check if the VoteID is set
-	if req.VoteID == "" {
-		return false, fmt.Errorf("VoteID is not set")
-	}
-
-	// Check if the Prefs is set
-	if len(req.Prefs) == 0 {
-		return false, fmt.Errorf("Prefs is not set")
-	}
-
-	return true, nil
-}
-
+// Request for [POST] /result
 type RequestResult struct {
 	BallotID string `json:"ballot-id"`
 }
 
-func isRequestResultValid(req RequestResult) (bool, error) {
-	// Check if the BallotID is set
-	if req.BallotID == "" {
-		return false, fmt.Errorf("BallotID is not set")
-	}
-
-	return true, nil
-}
-
+// Response for [POST] /result
 type ResponseResult struct {
-	Winner  string `json:"winner"`
-	Ranking []int  `json:"ranking"`
+	Winner comsoc.Alternative `json:"winner"`
 }
 
+// Generic response for message as error or /vote
 type ResponseMessage struct {
-	Message string `json:"error"`
+	Message string `json:"message"`
 }

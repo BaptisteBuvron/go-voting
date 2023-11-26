@@ -1,63 +1,152 @@
 package agt
 
 import (
+	"crypto/rand"
 	"fmt"
 	"ia04/comsoc"
+	"log"
+	"math/big"
 	"net/http"
+	"strconv"
 	"time"
 )
 
-// https://en.wikipedia.org/wiki/Ballot
+// A ballot is a device used to cast votes in an election and may be found as a piece of paper or a small ball used in voting.
+// ref: https://en.wikipedia.org/wiki/Ballot
 type BallotAgent struct {
-	rule           string
-	deadline       time.Time
-	voters         []string
-	alternativesNb int
-	tieBreak       []int
-	voted          []string
-	profiles       comsoc.Profile
+	id               string
+	rule             string
+	deadline         time.Time
+	voters           map[string]bool
+	alternativeCount int
+	tieBreak         comsoc.TieBreak
+	thresholds       []int
+	profiles         comsoc.Profile
 }
 
-type BallotAgentI interface {
-	AgentI
+// Create an new BallotAgent by verifying values
+func NewBallotAgent(rule string, deadline time.Time, voters []string, alternativeCount int, tieBreak []comsoc.Alternative) (*BallotAgent, error) {
+	// Check if the Rule is set
+	if rule == "" {
+		return nil, comsoc.HTTPError{Code: http.StatusBadRequest, Message: "Rule is not set"}
+	}
+	// Check if rule is implemented
+	switch rule {
+	case "majority":
+		fallthrough
+	case "borda":
+		fallthrough
+	case "stv":
+		fallthrough
+	case "approval":
+		fallthrough
+	case "copeland":
+		goto ruleIsImplemented
+	default:
+		return nil, comsoc.HTTPErrorf(http.StatusNotImplemented, "Rule %s is not implemented", rule)
+	}
+ruleIsImplemented:
+	// Check if the Deadline is set
+	if deadline.Before(time.Now()) {
+		return nil, comsoc.HTTPErrorf(comsoc.ErrorDeadline, "Deadline is already passed")
+	}
+	// Check if at least one voter is present
+	if len(voters) == 0 {
+		return nil, comsoc.HTTPErrorf(http.StatusBadRequest, "You must have at lease one voter")
+	}
+	// Check if the number of alternatives is valid
+	if alternativeCount < 2 {
+		return nil, comsoc.HTTPErrorf(http.StatusBadRequest, "You must have at lease two alternatives")
+	}
+	// TieBreak must be valid
+	err := comsoc.CheckAlternatives(tieBreak, alternativeCount)
+	if err != nil {
+		return nil, err
+	}
+	// generate unique time-based id
+	time := time.Now().UnixMilli()
+	uniqueNumber, err := rand.Int(rand.Reader, big.NewInt(0xffff))
+	if err != nil {
+		log.Println(err) // do not show uncontrolled informations
+		return nil, comsoc.HTTPErrorf(http.StatusInternalServerError, "Can't generate id")
+	}
+	id := fmt.Sprintf("%s-%s", rule, strconv.FormatInt(time<<8+uniqueNumber.Int64(), 16))
+	// Map voters
+	mapVoters := make(map[string]bool)
+	for _, voter := range voters {
+		mapVoters[voter] = false
+	}
+	// No error
+	return &BallotAgent{id, rule, deadline, mapVoters, alternativeCount, comsoc.TieBreakFactory(tieBreak), nil, nil}, nil
+
 }
 
-func NewBallotAgent(request RequestNewBallot) *BallotAgent {
-	deadline, _ := time.Parse(time.RFC3339, request.Deadline)
-	return &BallotAgent{request.Rule, deadline, request.Voters, request.Alternatives, request.TieBreak, nil, nil}
-}
-
-func (b *BallotAgent) addVoter(vote RequestVote) (err Error) {
-	//verif if voter exists in voters
-	exists := false
-	for _, v := range b.voters {
-		if v == vote.AgentID {
-			exists = true
-		}
+// Add a vote to a BallotAgent, can raise if: already voted, not authorized to vote, deadline is over, unnecessary options and bad alternatives
+// thread-unsafe
+func (b *BallotAgent) Vote(voterId string, alts []comsoc.Alternative, options []int) error {
+	// Verify if voter exists in voters and not already vote
+	alreadyVote, allowedToVote := b.voters[voterId]
+	if !allowedToVote {
+		return comsoc.HTTPErrorf(comsoc.ErrorRuleNotImplemented, "Voter %s are not allowed to vote for %s", voterId, b.id)
 	}
-	if !exists {
-		return Error{ErrorVoterNotFound, fmt.Sprintf("Voter %s not found", vote.AgentID)}
+	if alreadyVote {
+		return comsoc.HTTPErrorf(comsoc.ErrorAlreadyVoted, "Voter %s has already voted for %s", voterId, b.id)
 	}
-	//verif if voter already voted
-	for _, v := range b.voted {
-		if v == vote.AgentID {
-			return Error{ErrorAlreadyVoted, fmt.Sprintf("Voter %s already voted", vote.AgentID)}
-		}
-	}
-	//verify the deadline
+	// Verify the deadline
 	if time.Now().After(b.deadline) {
-		return Error{ErrorDeadline, fmt.Sprintf("Deadline %s is passed", b.deadline)}
+		return comsoc.HTTPErrorf(comsoc.ErrorDeadline, "Deadline %s is over for %s", b.deadline, b.id)
 	}
-	//verify if the number of alternatives is correct
-	if len(vote.Prefs) != b.alternativesNb {
-		return Error{http.StatusBadRequest, fmt.Sprintf("The number of alternatives is incorrect")}
+	// Verify if the number of alternatives is correct
+	err := comsoc.CheckAlternatives(alts, b.alternativeCount)
+	if err != nil {
+		return err
 	}
-	b.voted = append(b.voted, vote.AgentID)
-	// convert []int to []comsoc.Alternative
-	prefs := make([]comsoc.Alternative, len(vote.Prefs))
-	for i, pref := range vote.Prefs {
-		prefs[i] = comsoc.Alternative(pref)
+	// Check if thresholds is only present for approval
+	if b.rule == "approval" {
+		if len(b.thresholds) == 1 {
+			return comsoc.HTTPErrorf(http.StatusBadRequest, "You must provide only the threshold as option")
+		}
+		threshold := b.thresholds[0]
+		if threshold < 0 && threshold <= b.alternativeCount {
+			return comsoc.HTTPErrorf(http.StatusBadRequest, "Invalid threshold %d", threshold)
+		} else {
+			b.thresholds = append(b.thresholds, threshold)
+		}
+	} else if len(b.thresholds) != 0 {
+		return comsoc.HTTPErrorf(http.StatusBadRequest, "No options available for %s", b.rule)
 	}
-	b.profiles = append(b.profiles, prefs)
-	return
+	// Mark voter as voted and add is vote
+	b.voters[voterId] = true
+	b.profiles = append(b.profiles, alts)
+	// Everything go brrr
+	return nil
+}
+
+// Get the result of BallotAgent only after deadline
+func (b *BallotAgent) result() (comsoc.Alternative, error) {
+	// Check if vote is over
+	if b.deadline.After(time.Now()) {
+		return comsoc.Alternative(-1), comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline is not over come back at %v", b.deadline)
+	}
+	// Get scf
+	var scf comsoc.SCF
+	switch b.rule {
+	case "majority":
+		scf = comsoc.MajoritySCF
+	case "borda":
+		scf = comsoc.BordaSCF
+	case "stv":
+		scf = comsoc.STV_SCF
+	case "approval":
+		scf = func(p comsoc.Profile) (bestAlts []comsoc.Alternative, err error) {
+			return comsoc.ApprovalSCF(p, b.thresholds)
+		}
+	case "copeland":
+		scf = comsoc.CopelandSCF
+	}
+	// Use tieBreak
+	scfWithTieBreak := comsoc.SCFFactory(scf, b.tieBreak)
+	// Get result
+	return scfWithTieBreak(b.profiles)
+
 }

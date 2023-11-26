@@ -1,9 +1,15 @@
 package comsoc
 
+// Single Transferable Vote (STV) - Instant Runoff - alternative vote
 // ref: https://gitlab.utc.fr/lagruesy/ia04/-/blob/main/docs/sujets/td3/sujet.md#rappel-vote-simple-transf%C3%A9rable-single-transferable-vote-stv
 // ref: https://www.hds.utc.fr/~lagruesy/ens/ia04/02-Prise%20de%20d%C3%A9cision%20collective%20et%20th%C3%A9orie%20du%20choix%20social/#49
 func STV_SWF_Factory(negativeTieBreak TieBreak) SWF {
 	return func(p Profile) (Count, error) {
+		// Verify profile
+		err := CheckProfile(p)
+		if err != nil {
+			return nil, err
+		}
 		// Counter for score
 		count := CountFor(p)
 		// A set for removed alternatives
@@ -65,7 +71,8 @@ func STV_SWF_Factory(negativeTieBreak TieBreak) SWF {
 	}
 }
 
+// See: [comsoc.STV_SWF_Factory]
 var STV_SWF = STV_SWF_Factory(TieBreakHighest)
 
-// See: [comsoc.STV_SWF]
+// See: [comsoc.STV_SWF_Factory]
 var STV_SCF = SWF2SCF(STV_SWF)

@@ -14,15 +14,15 @@ Install [Go](https://golang.org/doc/install).
 Clone the repository:
 
 ```bash
-go install github.com/BaptisteBuvron/go-voting/cmd/client@v0.1.0
-go install github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
+go install github.com/BaptisteBuvron/go-voting/cmd/client@v1.0.0
+go install github.com/BaptisteBuvron/go-voting/cmd/server@v1.0.0
 ```
 
 Run the server:
 
 ```bash
 server
-//go run github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
+# go run github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
 ```
 
 Example commands for client:

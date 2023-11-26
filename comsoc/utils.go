@@ -62,7 +62,7 @@ func CheckAlternatives(alts []Alternative, size int) error {
 	}
 
 	// Verify that all alternatives are present (depending on the size of the profile)
-	for i := 0; i < size; i++ {
+	for i := 1; i <= size; i++ {
 		alt := Alternative(i)
 		if !meetAlts[alt] {
 			return HTTPErrorf(http.StatusBadRequest, "Missing alternative at %d", alt)
@@ -76,10 +76,9 @@ func CheckAlternatives(alts []Alternative, size int) error {
 // Checks that the profile is complete and that each alternative only appears once per preference.
 func CheckProfile(prefs Profile) error {
 	if len(prefs) == 0 {
-		return HTTPError{http.StatusBadRequest, "Empty profile"}
+		return nil // empty profile
 	}
 	size := len(prefs[0])
-
 	// Check all alternatives
 	for _, alts := range prefs {
 		err := CheckAlternatives(alts, size)
@@ -89,6 +88,20 @@ func CheckProfile(prefs Profile) error {
 	}
 	// No error
 	return nil
+}
+
+// Checks that the profile is complete adn skip if empty
+func GuardProfile(swf SWF) SWF {
+	return func(p Profile) (Count, error) {
+		if len(p) == 0 {
+			return make(Count), nil
+		}
+		err := CheckProfile(p)
+		if err != nil {
+			return nil, err
+		}
+		return swf(p)
+	}
 }
 
 // Checks the profile given, e.g. that they are all complete and that each alts alternative appears exactly once per preferences
@@ -162,7 +175,7 @@ type ScoreEvaluator func(int, int) int
 // ref: https://www.hds.utc.fr/~lagruesy/ens/ia04/02-Prise%20de%20d%c3%a9cision%20collective%20et%20th%c3%a9orie%20du%20choix%20social/#33
 func ScoringSWFFactory(evaluator ScoreEvaluator) SWF {
 	return func(p Profile) (Count, error) {
-		count := make(Count, 0)
+		count := CountFor(p)
 		err := CheckProfile(p)
 		if err != nil {
 			return nil, err
@@ -180,6 +193,10 @@ type Assert struct {
 	t *testing.T
 }
 
+func NewAssert(t *testing.T) Assert {
+	return Assert{t}
+}
+
 func (a *Assert) NoError(err error) {
 	a.t.Helper() // increase stack pointer in log
 	if err != nil {
@@ -194,9 +211,23 @@ func (a *Assert) Error(err error) {
 	}
 }
 
+func (a *Assert) True(boolean bool) {
+	a.t.Helper() // increase stack pointer in log
+	if boolean {
+		a.t.Error("Boolean must be true")
+	}
+}
+
 func (a *Assert) DeepEqual(got any, expected any) {
 	a.t.Helper() // increase stack pointer in log
 	if !reflect.DeepEqual(got, expected) {
+		a.t.Errorf("Results mismatch: Got %v, Expected %v", got, expected)
+	}
+}
+
+func (a *Assert) Equal(got any, expected any) {
+	a.t.Helper() // increase stack pointer in log
+	if got != expected {
 		a.t.Errorf("Results mismatch: Got %v, Expected %v", got, expected)
 	}
 }
@@ -212,13 +243,6 @@ func (a *Assert) Empty(got any) {
 		a.t.Errorf("Expected empty array: Got %v", got)
 	}
 }
-
-const (
-	ErrorAlreadyVoted       = http.StatusForbidden
-	ErrorVoterNotAllowed    = http.StatusUnauthorized
-	ErrorDeadline           = http.StatusGone
-	ErrorRuleNotImplemented = http.StatusNotImplemented
-)
 
 type HTTPError struct {
 	Code    int

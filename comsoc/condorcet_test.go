@@ -7,23 +7,23 @@ import (
 func TestCondorcetWinner(t *testing.T) {
 	assert := Assert{t}
 
-	// 0 est le gagnant de Condorcet
+	// 1 is Condorcet winner
 	prefs1 := Profile{
-		[]Alternative{0, 1, 2},
-		[]Alternative{0, 2, 1},
-		[]Alternative{2, 1, 0},
+		[]Alternative{1, 2, 3},
+		[]Alternative{1, 3, 2},
+		[]Alternative{3, 2, 1},
 	}
-	// 0 win against 2 and 1
-	// 2 win against 1
+	// 1 win against 3 and 2
+	// 3 win against 2
 	bestAlts, err := CondorcetWinner(prefs1)
 	assert.NoError(err)
-	assert.DeepEqual(bestAlts, []Alternative{0})
+	assert.DeepEqual(bestAlts, []Alternative{1})
 
 	// No Condorcet Winner
 	prefs2 := Profile{
-		[]Alternative{0, 1, 2},
-		[]Alternative{1, 2, 0},
-		[]Alternative{2, 0, 1},
+		[]Alternative{1, 2, 3},
+		[]Alternative{2, 3, 1},
+		[]Alternative{3, 1, 2},
 	}
 	bestAlts, err = CondorcetWinner(prefs2)
 	assert.NoError(err)
@@ -31,15 +31,19 @@ func TestCondorcetWinner(t *testing.T) {
 
 	// No Condorcet Winner
 	prefs3 := Profile{
-		[]Alternative{0, 2, 1},
-		[]Alternative{0, 2, 1},
-		[]Alternative{0, 2, 1},
-		[]Alternative{2, 1, 0},
-		[]Alternative{2, 1, 0},
-		[]Alternative{1, 2, 0},
+		[]Alternative{1, 3, 2},
+		[]Alternative{1, 3, 2},
+		[]Alternative{1, 3, 2},
+		[]Alternative{3, 2, 1},
+		[]Alternative{3, 2, 1},
+		[]Alternative{2, 3, 1},
 	}
-	// 2 win against 1
+	// 3 win against 2
 	bestAlts, err = CondorcetWinner(prefs3)
 	assert.NoError(err)
 	assert.Empty(bestAlts)
+
+	// Test case  Empty profile
+	_, emptyErr := CondorcetWinner(Profile{})
+	assert.NoError(emptyErr)
 }

@@ -19,7 +19,7 @@ type BallotAgent struct {
 	deadline         time.Time
 	voters           map[string]bool
 	alternativeCount int
-	tieBreak         comsoc.TieBreak
+	tieBreak         []comsoc.Alternative
 	thresholds       []int
 	profiles         comsoc.Profile
 }
@@ -32,23 +32,13 @@ func NewBallotAgent(rule string, deadline time.Time, voters []string, alternativ
 	}
 	// Check if rule is implemented
 	switch rule {
-	case "majority":
-		fallthrough
-	case "borda":
-		fallthrough
-	case "stv":
-		fallthrough
-	case "approval":
-		fallthrough
-	case "copeland":
-		goto ruleIsImplemented
+	case "majority", "borda", "stv", "approval", "copeland":
 	default:
 		return nil, comsoc.HTTPErrorf(http.StatusNotImplemented, "Rule %s is not implemented", rule)
 	}
-ruleIsImplemented:
 	// Check if the Deadline is set
 	if deadline.Before(time.Now()) {
-		return nil, comsoc.HTTPErrorf(comsoc.ErrorDeadline, "Deadline is already passed")
+		return nil, comsoc.HTTPErrorf(http.StatusBadRequest, "Deadline is already passed")
 	}
 	// Check if at least one voter is present
 	if len(voters) == 0 {
@@ -77,24 +67,24 @@ ruleIsImplemented:
 		mapVoters[voter] = false
 	}
 	// No error
-	return &BallotAgent{id, rule, deadline, mapVoters, alternativeCount, comsoc.TieBreakFactory(tieBreak), nil, nil}, nil
+	return &BallotAgent{id, rule, deadline, mapVoters, alternativeCount, tieBreak, nil, nil}, nil
 
 }
 
 // Add a vote to a BallotAgent, can raise if: already voted, not authorized to vote, deadline is over, unnecessary options and bad alternatives
 // thread-unsafe
 func (b *BallotAgent) Vote(voterId string, alts []comsoc.Alternative, options []int) error {
+	// Verify the deadline
+	if time.Now().After(b.deadline) {
+		return comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline %s is over for %s", b.deadline, b.id)
+	}
 	// Verify if voter exists in voters and not already vote
 	alreadyVote, allowedToVote := b.voters[voterId]
 	if !allowedToVote {
-		return comsoc.HTTPErrorf(comsoc.ErrorRuleNotImplemented, "Voter %s are not allowed to vote for %s", voterId, b.id)
+		return comsoc.HTTPErrorf(http.StatusForbidden, "Voter %s are not allowed to vote for %s", voterId, b.id)
 	}
 	if alreadyVote {
-		return comsoc.HTTPErrorf(comsoc.ErrorAlreadyVoted, "Voter %s has already voted for %s", voterId, b.id)
-	}
-	// Verify the deadline
-	if time.Now().After(b.deadline) {
-		return comsoc.HTTPErrorf(comsoc.ErrorDeadline, "Deadline %s is over for %s", b.deadline, b.id)
+		return comsoc.HTTPErrorf(http.StatusForbidden, "Voter %s has already voted for %s", voterId, b.id)
 	}
 	// Verify if the number of alternatives is correct
 	err := comsoc.CheckAlternatives(alts, b.alternativeCount)
@@ -126,7 +116,7 @@ func (b *BallotAgent) Vote(voterId string, alts []comsoc.Alternative, options []
 func (b *BallotAgent) result() (comsoc.Alternative, []comsoc.Alternative, error) {
 	// Check if vote is over
 	if b.deadline.After(time.Now()) {
-		return comsoc.Alternative(-1), nil, comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline is not over come back at %v", b.deadline)
+		return 0, nil, comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline is not over come back at %v", b.deadline)
 	}
 	// Get scf
 	var scf comsoc.SCF
@@ -146,10 +136,17 @@ func (b *BallotAgent) result() (comsoc.Alternative, []comsoc.Alternative, error)
 	}
 	results, err := scf(b.profiles)
 	if err != nil {
-		return comsoc.Alternative(-1), nil, err
+		return 0, nil, err
 	}
 	// apply tie break
-	winner, err := b.tieBreak(results)
+	tb := comsoc.TieBreakFactory(b.tieBreak)
+	winner, err := tb(results)
+
+	// If not ranking all is equality
+	if results == nil {
+		results = b.tieBreak
+	}
+
 	// Get result
 	return winner, results, err
 

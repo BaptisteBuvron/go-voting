@@ -88,7 +88,7 @@ func (server *RestServerAgent) doResult(req RequestResult, res Response) error {
 
 }
 
-func (server *RestServerAgent) Start() {
+func (server *RestServerAgent) Run() {
 	// Creation of the multiplexer
 	mux := http.NewServeMux()
 	mux.HandleFunc("/new_ballot", route("POST", server.doNewBallot))
@@ -105,5 +105,10 @@ func (server *RestServerAgent) Start() {
 
 	// Server launch
 	log.Println("Listening on", server.addr)
-	go log.Fatal(s.ListenAndServe())
+	s.ListenAndServe()
+}
+
+func (server *RestServerAgent) Start() {
+	// Creation of the multiplexer
+	go server.Run()
 }

@@ -18,11 +18,15 @@ func respondJSON(w http.ResponseWriter, statuscode int, value any) {
 	w.WriteHeader(statuscode)
 	w.Header().Set("Content-Type", "application/json")
 	serial, _ := json.Marshal(value)
-	w.Write(serial)
-	log.Printf("[JSON] %s", string(serial[:]))
+	_, err := w.Write(serial)
+	if err != nil {
+		log.Printf("[JSON] Error: %s", err)
+	} else {
+		log.Printf("[JSON] %s", string(serial[:]))
+	}
 }
 
-// Function to use to send JSON
+// Response Function to use to send JSON
 type Response = func(statuscode int, value any)
 
 // Create a request handler by deserialize the request and send it to the inner function
@@ -112,32 +116,32 @@ func ParseInt(arg string, name string) int {
 	return i
 }
 
-// Parse an string list or exit program
+// ParseStringList Parse a string list or exit program
 func ParseStringList(arg string, name string) []string {
 	return strings.Split(arg, ",")
 }
 
-// Parse an Alternative list or exit program
+// ParseAlternatives Parse an Alternative list or exit program
 func ParseAlternatives(arg string, name string) []comsoc.Alternative {
-	strings := ParseStringList(arg, name)
-	ints := make([]comsoc.Alternative, len(strings))
-	for i, part := range strings {
+	stringList := ParseStringList(arg, name)
+	ints := make([]comsoc.Alternative, len(stringList))
+	for i, part := range stringList {
 		ints[i] = comsoc.Alternative(ParseInt(part, fmt.Sprintf("%s[%d]", name, i)))
 	}
 	return ints
 }
 
-// Parse an int list or exit program
+// ParseIntList Parse an int list or exit program
 func ParseIntList(arg string, name string) []int {
-	strings := ParseStringList(arg, name)
-	ints := make([]int, len(strings))
-	for i, part := range strings {
+	stringList := ParseStringList(arg, name)
+	ints := make([]int, len(stringList))
+	for i, part := range stringList {
 		ints[i] = ParseInt(part, fmt.Sprintf("%s[%d]", name, i))
 	}
 	return ints
 }
 
-// Parse time or exit program
+// ParseTime Parse time or exit program
 func ParseTime(arg string, name string) time.Time {
 	timestamp, err := time.Parse(time.RFC3339, arg)
 	if err != nil {

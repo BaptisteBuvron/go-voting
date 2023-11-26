@@ -79,11 +79,11 @@ func (server *RestServerAgent) doResult(req RequestResult, res Response) error {
 	}
 
 	// Add vote to ballot or raise error
-	winner, err := ballotAgent.result()
+	winner, ranking, err := ballotAgent.result()
 	if err != nil {
 		return err
 	}
-	res(http.StatusOK, ResponseResult{Winner: winner})
+	res(http.StatusOK, ResponseResult{Winner: winner, Ranking: ranking})
 	return nil
 
 }

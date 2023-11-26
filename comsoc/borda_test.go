@@ -22,6 +22,10 @@ func TestBordaSWF(t *testing.T) {
 	count, err := BordaSWF(profile1)
 	assert.NoError(err)
 	assert.DeepEqual(count, expectedCount)
+
+	// Test case  Empty profile
+	_, emptyErr := BordaSWF(Profile{})
+	assert.NoError(emptyErr)
 }
 
 func TestBordaSCF(t *testing.T) {

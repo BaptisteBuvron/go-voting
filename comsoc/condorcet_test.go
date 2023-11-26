@@ -42,4 +42,8 @@ func TestCondorcetWinner(t *testing.T) {
 	bestAlts, err = CondorcetWinner(prefs3)
 	assert.NoError(err)
 	assert.Empty(bestAlts)
+
+	// Test case  Empty profile
+	_, emptyErr := CondorcetWinner(Profile{})
+	assert.NoError(emptyErr)
 }

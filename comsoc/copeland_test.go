@@ -21,4 +21,8 @@ func TestCopelandSWF(t *testing.T) {
 	count, err := CopelandSWF(validProfile)
 	assert.NoError(err)
 	assert.DeepEqual(count, expectedCount)
+
+	// Test case  Empty profile
+	_, emptyErr := CopelandSWF(Profile{})
+	assert.NoError(emptyErr)
 }

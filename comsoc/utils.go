@@ -76,10 +76,9 @@ func CheckAlternatives(alts []Alternative, size int) error {
 // Checks that the profile is complete and that each alternative only appears once per preference.
 func CheckProfile(prefs Profile) error {
 	if len(prefs) == 0 {
-		return HTTPError{http.StatusBadRequest, "Empty profile"}
+		return nil // empty profile
 	}
 	size := len(prefs[0])
-
 	// Check all alternatives
 	for _, alts := range prefs {
 		err := CheckAlternatives(alts, size)
@@ -89,6 +88,20 @@ func CheckProfile(prefs Profile) error {
 	}
 	// No error
 	return nil
+}
+
+// Checks that the profile is complete adn skip if empty
+func GuardProfile(swf SWF) SWF {
+	return func(p Profile) (Count, error) {
+		if len(p) == 0 {
+			return make(Count), nil
+		}
+		err := CheckProfile(p)
+		if err != nil {
+			return nil, err
+		}
+		return swf(p)
+	}
 }
 
 // Checks the profile given, e.g. that they are all complete and that each alts alternative appears exactly once per preferences
@@ -214,7 +227,7 @@ func (a *Assert) DeepEqual(got any, expected any) {
 
 func (a *Assert) Equal(got any, expected any) {
 	a.t.Helper() // increase stack pointer in log
-	if got == expected {
+	if got != expected {
 		a.t.Errorf("Results mismatch: Got %v, Expected %v", got, expected)
 	}
 }

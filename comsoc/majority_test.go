@@ -29,9 +29,8 @@ func TestMajoritySWF(t *testing.T) {
 	assert.DeepEqual(bestAlts, expectedBestAlts)
 
 	// Test case  Empty profile
-	emptyProfile := Profile{}
-	_, emptyErr := MajoritySWF(emptyProfile)
-	assert.Error(emptyErr) // TODO discuss empty fail(We need to support it)
+	_, emptyErr := MajoritySWF(Profile{})
+	assert.NoError(emptyErr)
 
 	// Test case equality
 	equalityProfile := Profile{

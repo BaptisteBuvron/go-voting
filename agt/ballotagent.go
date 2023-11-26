@@ -19,7 +19,7 @@ type BallotAgent struct {
 	deadline         time.Time
 	voters           map[string]bool
 	alternativeCount int
-	tieBreak         comsoc.TieBreak
+	tieBreak         []comsoc.Alternative
 	thresholds       []int
 	profiles         comsoc.Profile
 }
@@ -67,7 +67,7 @@ func NewBallotAgent(rule string, deadline time.Time, voters []string, alternativ
 		mapVoters[voter] = false
 	}
 	// No error
-	return &BallotAgent{id, rule, deadline, mapVoters, alternativeCount, comsoc.TieBreakFactory(tieBreak), nil, nil}, nil
+	return &BallotAgent{id, rule, deadline, mapVoters, alternativeCount, tieBreak, nil, nil}, nil
 
 }
 
@@ -139,7 +139,14 @@ func (b *BallotAgent) result() (comsoc.Alternative, []comsoc.Alternative, error)
 		return 0, nil, err
 	}
 	// apply tie break
-	winner, err := b.tieBreak(results)
+	tb := comsoc.TieBreakFactory(b.tieBreak)
+	winner, err := tb(results)
+
+	// If not ranking all is equality
+	if results == nil {
+		results = b.tieBreak
+	}
+
 	// Get result
 	return winner, results, err
 

@@ -34,23 +34,24 @@ func TieBreakHighest(alts []Alternative) (Alternative, error) {
 // We prefer the first candidate
 func TieBreakFactory(orderedAlts []Alternative) TieBreak {
 	return func(alts []Alternative) (Alternative, error) {
+		// Check orderedAlts
+		if err := CheckAlternatives(orderedAlts, len(orderedAlts)); err != nil {
+			return 0, err
+		}
 		// Check if at least one candidate
 		if len(orderedAlts) == 0 {
 			return 0, errors.New("Empty alternatives")
 		}
-		maxIndex := len(orderedAlts)
-		maxAlt := alts[0]
-		for _, alternative := range alts {
-			i := 0
-			for i < maxIndex {
-				if orderedAlts[i] == alternative {
-					maxIndex = i
-					maxAlt = alternative
+		// Take the first
+		for _, winner := range orderedAlts {
+			for _, alt := range alts {
+				if winner == alt {
+					return winner, nil
 				}
-				i += 1
 			}
 		}
-		return maxAlt, nil
+		return orderedAlts[0], nil
+
 	}
 }
 
@@ -72,6 +73,7 @@ func SWFFactory(swf SWF, tb TieBreak) SWFWithTieBreak {
 		if err != nil {
 			return nil, err
 		}
+
 		// Rank the counts according to the tie break in case of a tie, otherwise you can large to smallest
 		var alts []Alternative
 		for alt := range count {

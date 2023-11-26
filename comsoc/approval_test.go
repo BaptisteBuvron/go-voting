@@ -47,6 +47,13 @@ func TestApprovalSWF(t *testing.T) {
 	assert.NoError(err)
 	assert.DeepEqual(count3, expectedCount3)
 
+	// Test case  Empty profile
+	_, emptyErr := ApprovalSWF(Profile{}, []int{})
+	assert.NoError(emptyErr)
+
+	// Test case  Wrong threshold
+	_, emptyErr = ApprovalSWF(Profile{}, []int{0})
+	assert.Error(emptyErr)
 }
 
 func TestApprovalSCF(t *testing.T) {
@@ -74,5 +81,4 @@ func TestApprovalSCF(t *testing.T) {
 	bestAlts3, err := ApprovalSCF(profile1, thresholds3)
 	assert.NoError(err)
 	assert.DeepEqual(bestAlts3, expectedBestAlts3)
-
 }

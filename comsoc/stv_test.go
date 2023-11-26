@@ -36,4 +36,8 @@ func TestSTV_SWF(t *testing.T) {
 	count, err = STV_SWF(profile)
 	assert.NoError(err)
 	assert.DeepEqual(count, expectedCount)
+
+	// Test case  Empty profile
+	_, emptyErr := STV_SWF(Profile{})
+	assert.NoError(emptyErr)
 }

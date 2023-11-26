@@ -14,21 +14,22 @@ Install [Go](https://golang.org/doc/install).
 Clone the repository:
 
 ```bash
-git clone https://github.com/BaptisteBuvron/go-voting
+go install github.com/BaptisteBuvron/go-voting/cmd/client@v0.1.0
+go install github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
 ```
 
 Run the server:
 
 ```bash
-go run ia04/cmd/server
+server
 ```
 
 Example commands for client:
 
 ```bash
-go run ia04/cmd/client v1 new_ballot majority '2023-11-26T16:27:11+00:00' 'v1,v2,v3' 5 '1,2,3,4,5'
-go run ia04/cmd/client v1 vote majority-18c0c24a3245e '4,2,3,1,5'
-go run ia04/cmd/client v1 result majority-18c0c24a3245e
+client v1 new_ballot majority '2023-11-26T16:27:11+00:00' 'v1,v2,v3' 5 '1,2,3,4,5'
+client v1 vote majority-18c0c24a3245e '4,2,3,1,5'
+client v1 result majority-18c0c24a3245e
 ```
 
 Run tests:

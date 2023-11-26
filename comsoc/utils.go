@@ -3,6 +3,7 @@ package comsoc
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -36,6 +37,10 @@ func MaxCount(count Count) (bestAlts []Alternative) {
 			bestAlts = append(bestAlts, alt)
 		}
 	}
+	//order bestAlts
+	sort.Slice(bestAlts, func(i, j int) bool {
+		return bestAlts[i] < bestAlts[j]
+	})
 	return bestAlts
 }
 

@@ -22,6 +22,7 @@ Run the server:
 
 ```bash
 server
+//go run github.com/BaptisteBuvron/go-voting/cmd/server@v0.1.0
 ```
 
 Example commands for client:

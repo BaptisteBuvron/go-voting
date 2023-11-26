@@ -32,7 +32,7 @@ func NewBallotAgent(rule string, deadline time.Time, voters []string, alternativ
 	}
 	// Check if rule is implemented
 	switch rule {
-	case "majority", "borda", "stv", "approval", "copeland":
+	case "majority", "borda", "stv", "approval", "copeland", "kemeny":
 	default:
 		return nil, comsoc.HTTPErrorf(http.StatusNotImplemented, "Rule %s is not implemented", rule)
 	}
@@ -133,6 +133,8 @@ func (b *BallotAgent) result() (comsoc.Alternative, []comsoc.Alternative, error)
 		}
 	case "copeland":
 		scf = comsoc.CopelandSCF
+	case "kemeny":
+		scf = comsoc.KemenySCF
 	}
 	results, err := scf(b.profiles)
 	if err != nil {

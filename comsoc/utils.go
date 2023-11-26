@@ -22,6 +22,15 @@ func Rank(alt Alternative, prefs []Alternative) int {
 	return -1
 }
 
+// Get a map for get rank of Alternative
+func Ranker(prefs []Alternative) Count {
+	ranker := make(Count)
+	for index, pref := range prefs {
+		ranker[pref] = index
+	}
+	return ranker
+}
+
 // Returns true iff alt1 is preferred over alt2.
 func IsPref(alt1, alt2 Alternative, prefs []Alternative) bool {
 	return Rank(alt1, prefs) < Rank(alt2, prefs)

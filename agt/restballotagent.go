@@ -45,6 +45,10 @@ func (server *RestServerAgent) doNewBallot(req RequestNewBallot, res Response) e
 
 // [POST] /vote
 func (server *RestServerAgent) doVote(req RequestVote, res Response) error {
+	// We need to lock for being thread-safe
+	server.Lock()
+	defer server.Unlock()
+
 	// Get the ballot from server
 	ballotAgent, ok := server.ballots[req.BallotID]
 	if !ok {
@@ -64,6 +68,10 @@ func (server *RestServerAgent) doVote(req RequestVote, res Response) error {
 
 // [POST] /result
 func (server *RestServerAgent) doResult(req RequestResult, res Response) error {
+	// We need to wait the server to be in unlocked phase (but we dont need to lock because we read-only)
+	server.Lock()
+	server.Unlock() // Unlock directly
+
 	// Get the ballot from server
 	ballotAgent, ok := server.ballots[req.BallotID]
 	if !ok {

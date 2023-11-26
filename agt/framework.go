@@ -55,7 +55,7 @@ func route[Request any](method string, do func(Request, Response) error) func(w 
 			if httpError, ok := err.(comsoc.HTTPError); ok {
 				respondJSON(w, httpError.Code, ResponseMessage{Message: httpError.Message})
 			} else {
-				respondJSON(w, http.StatusInternalServerError, ResponseMessage{Message: "Internal Error"})
+				respondJSON(w, http.StatusInternalServerError, ResponseMessage{Message: "Internal Server Error"})
 			}
 		}
 	}
@@ -69,7 +69,7 @@ func request[R any](url string, req any) (resp R, err error) {
 	}
 	res, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return resp, comsoc.HTTPErrorf(res.StatusCode, err.Error())
+		return resp, err
 	}
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(res.Body)
@@ -87,6 +87,19 @@ func request[R any](url string, req any) (resp R, err error) {
 		err = json.Unmarshal(buf.Bytes(), &resp)
 	}
 	return resp, err
+}
+
+func WaitAvailable(url string, duration time.Duration) bool {
+	start := time.Now()
+	for {
+		_, err := http.Post(url, "application/json", bytes.NewBuffer([]byte{}))
+		if err == nil {
+			return true
+		}
+		if duration > time.Now().Sub(start) {
+			return false
+		}
+	}
 }
 
 // Parse an int or exit program

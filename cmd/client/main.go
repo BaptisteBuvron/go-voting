@@ -46,5 +46,8 @@ func main() {
 			os.Exit(1)
 		}
 		client.Result(argv[0])
+	default:
+		fmt.Fprintf(os.Stderr, "Error: Unknown command %s\n", os.Args[2])
+		os.Exit(1)
 	}
 }

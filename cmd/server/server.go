@@ -6,5 +6,5 @@ import (
 
 func main() {
 	ag := agt.NewRestServerAgent(":8080")
-	ag.Start()
+	ag.Run()
 }

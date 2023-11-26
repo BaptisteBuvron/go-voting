@@ -2,24 +2,25 @@ package comsoc
 
 import (
 	"errors"
+	"net/http"
 	"sort"
 )
 
 // A function that allows you to select a candidate among the best.
-type TieBreak func(alts []Alternative) (alt Alternative, err error)
+type TieBreak func([]Alternative) (Alternative, error)
 
 // Take the first candidate.
 func TieBreakFirstOne(alts []Alternative) (Alternative, error) {
 	if len(alts) == 0 {
-		return Alternative(-1), errors.New("Empty alternatives")
+		return Alternative(-1), HTTPErrorf(http.StatusBadRequest, "Empty alternatives")
 	}
 	return alts[0], nil
 }
 
 // Take the highest candidate (for be more determinist).
-func TieBreakHighest(alts []Alternative) (alt Alternative, err error) {
+func TieBreakHighest(alts []Alternative) (Alternative, error) {
 	if len(alts) == 0 {
-		return Alternative(-1), errors.New("Empty alternatives")
+		return Alternative(-1), HTTPErrorf(http.StatusBadRequest, "Empty alternatives")
 	}
 	maxAlt := alts[0]
 	for _, alt := range alts {
@@ -30,9 +31,8 @@ func TieBreakHighest(alts []Alternative) (alt Alternative, err error) {
 	return maxAlt, nil
 }
 
-// TODO, le premier est préféré ou détesté ?
+// We prefer the first candidate
 func TieBreakFactory(orderedAlts []Alternative) TieBreak {
-	// TODO make verification
 	return func(alts []Alternative) (Alternative, error) {
 		// Check if at least one candidate
 		if len(orderedAlts) == 0 {
@@ -55,15 +55,15 @@ func TieBreakFactory(orderedAlts []Alternative) TieBreak {
 }
 
 // Social Welfare Function with tie break.
-type SWFWithTieBreak func(p Profile) (alts []Alternative, err error)
+type SWFWithTieBreak func(Profile) ([]Alternative, error)
 
 // Social Choice Function with tie break.
-type SCFWithTieBreak func(p Profile) (bestAlt Alternative, err error)
+type SCFWithTieBreak func(Profile) (Alternative, error)
 
-// les SWF doivent renvoyer un ordre total sans égalité
-// TODO TEST
+// SWFs must return a total order without ties
 func SWFFactory(swf SWF, tb TieBreak) SWFWithTieBreak {
 	return func(p Profile) ([]Alternative, error) {
+		// Check profile (must be already did by the swf)
 		err := CheckProfile(p)
 		if err != nil {
 			return nil, err
@@ -72,20 +72,20 @@ func SWFFactory(swf SWF, tb TieBreak) SWFWithTieBreak {
 		if err != nil {
 			return nil, err
 		}
-		// Classer les counts en fonction du tie break en cas d'égalité, sinon tu peux grand au plus petit
+		// Rank the counts according to the tie break in case of a tie, otherwise you can large to smallest
 		var alts []Alternative
 		for alt := range count {
 			alts = append(alts, alt)
 		}
 
-		// Utiliser le tie break pour ordonner les alternatives en cas d'égalité
+		// Use the tie break to order the alternatives in case of a tie
 		sort.Slice(alts, func(i, j int) bool {
-			// Utiliser le tie break uniquement en cas d'égalité
+			// Use tie break only in case of tie
 			if count[alts[i]] == count[alts[j]] {
 				tbResult, _ := tb([]Alternative{alts[i], alts[j]})
 				return tbResult == alts[i] // Inverser l'ordre ici
 			}
-			// Si pas d'égalité, ordonner par le nombre de voix
+			// If no tie, order by number of votes
 			return count[alts[i]] > count[alts[j]]
 		})
 
@@ -93,7 +93,7 @@ func SWFFactory(swf SWF, tb TieBreak) SWFWithTieBreak {
 	}
 }
 
-// TODO TEST
+// Must return the best alternative regarding to the tiebreak
 func SCFFactory(scf SCF, tb TieBreak) SCFWithTieBreak {
 	return func(p Profile) (Alternative, error) {
 		bestAlts, err := scf(p)

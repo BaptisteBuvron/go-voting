@@ -2,13 +2,14 @@ package comsoc
 
 // checks if a Condorcet winner exists, if this is not the case return an empty slice
 // ref: https://www.hds.utc.fr/~lagruesy/ens/ia04/02-Prise%20de%20d%c3%a9cision%20collective%20et%20th%c3%a9orie%20du%20choix%20social/#13
-func CondorcetWinner(p Profile) (bestAlts []Alternative, err error) {
+func CondorcetWinner(p Profile) ([]Alternative, error) {
 	// Check if profile is complet
-	err = CheckProfile(p)
+	err := CheckProfile(p)
 	if err != nil {
-		return bestAlts, err
+		return nil, err
 	}
 	// Tests on all alternatives
+	var bestAlts []Alternative
 	for _, alt1 := range p[0] {
 		// Search if this alternative fail against someone
 		for _, alt2 := range p[0] {

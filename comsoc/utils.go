@@ -2,6 +2,7 @@ package comsoc
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"sort"
 	"testing"
@@ -44,36 +45,46 @@ func MaxCount(count Count) (bestAlts []Alternative) {
 	return bestAlts
 }
 
-// Checks that the profile is complete and that each alternative only appears once per preference.
-func CheckProfile(prefs Profile) error {
-	var size int = -1
-	if len(prefs) == 0 {
-		return fmt.Errorf("Empty Profile")
+// Check if alternatives are valid
+func CheckAlternatives(alts []Alternative, size int) error {
+	// Check if each preferences have the same size
+	if size != len(alts) {
+		return HTTPErrorf(http.StatusBadRequest, "Incomplete alternatives got %v but expect size %d", alts, size)
 	}
 
-	for i, alts := range prefs {
-		// Check if each preferences have the same size
-		if size == -1 {
-			size = len(alts)
-		} else if size != len(alts) {
-			return fmt.Errorf("Incomplete alternatives at %d got %v but expect size %d", i, alts, size)
+	// Verify if not alternative are duplicated
+	meetAlts := make(map[Alternative]bool)
+	for _, alt := range alts {
+		if meetAlts[alt] {
+			return HTTPErrorf(http.StatusBadRequest, "Duplicate alternative %d", alt)
 		}
+		meetAlts[alt] = true
+	}
 
-		// Verify if not alternative are duplicated
-		meetAlts := make(map[Alternative]bool)
-		for _, alt := range alts {
-			if meetAlts[alt] {
-				return fmt.Errorf("Duplicate alternative at %d : %d", i, alt)
-			}
-			meetAlts[alt] = true
+	// Verify that all alternatives are present (depending on the size of the profile)
+	for i := 0; i < size; i++ {
+		alt := Alternative(i)
+		if !meetAlts[alt] {
+			return HTTPErrorf(http.StatusBadRequest, "Missing alternative at %d", alt)
 		}
+	}
 
-		// Verify that all alternatives are present (depending on the size of the profile)
-		for i := 0; i < size; i++ {
-			alt := Alternative(i)
-			if !meetAlts[alt] {
-				return fmt.Errorf("Missing alternative at %d : %d", i, alt)
-			}
+	// No error found
+	return nil
+}
+
+// Checks that the profile is complete and that each alternative only appears once per preference.
+func CheckProfile(prefs Profile) error {
+	if len(prefs) == 0 {
+		return HTTPError{http.StatusBadRequest, "Empty profile"}
+	}
+	size := len(prefs[0])
+
+	// Check all alternatives
+	for _, alts := range prefs {
+		err := CheckAlternatives(alts, size)
+		if err != nil {
+			return err
 		}
 	}
 	// No error
@@ -91,12 +102,12 @@ func CheckProfileAlternative(prefs Profile, alts []Alternative) error {
 			if missing[alt] {
 				missing[alt] = false
 			} else {
-				return fmt.Errorf("Duplicate alternative %d on voter %d at index %d", alt, voter, index)
+				return HTTPErrorf(http.StatusBadRequest, "Duplicate alternative %d on voter %d at index %d", alt, voter, index)
 			}
 		}
 		for alt, isMissing := range missing {
 			if isMissing {
-				return fmt.Errorf("Missing alternative %d on voter %d", alt, voter)
+				return HTTPErrorf(http.StatusBadRequest, "Missing alternative %d on voter %d", alt, voter)
 			}
 		}
 	}
@@ -117,20 +128,19 @@ func WinAgainst(alt1 Alternative, alt2 Alternative, p Profile) bool {
 }
 
 // Social Welfare Function.
-type SWF func(p Profile) (count Count, err error)
+type SWF func(Profile) (Count, error)
 
 // Social Choice Function.
-type SCF func(p Profile) (bestAlts []Alternative, err error)
+type SCF func(Profile) ([]Alternative, error)
 
 // Transform a SWF into SCF.
 func SWF2SCF(swf SWF) SCF {
-	return func(p Profile) (bestAlts []Alternative, err error) {
+	return func(p Profile) ([]Alternative, error) {
 		count, err := swf(p)
 		if err != nil {
-			return
+			return nil, err
 		}
-		bestAlts = MaxCount(count)
-		return
+		return MaxCount(count), nil
 	}
 }
 
@@ -146,23 +156,23 @@ func CountFor(p Profile) Count {
 }
 
 // Function for evaluate score
-type ScoreEvaluator func(index int, size int) (score int)
+type ScoreEvaluator func(int, int) int
 
 // A voting method that gives points to the candidate based on their position in the ranking
 // ref: https://www.hds.utc.fr/~lagruesy/ens/ia04/02-Prise%20de%20d%c3%a9cision%20collective%20et%20th%c3%a9orie%20du%20choix%20social/#33
 func ScoringSWFFactory(evaluator ScoreEvaluator) SWF {
-	return func(p Profile) (count Count, err error) {
-		count = make(Count, 0)
-		err = CheckProfile(p)
+	return func(p Profile) (Count, error) {
+		count := make(Count, 0)
+		err := CheckProfile(p)
 		if err != nil {
-			return
+			return nil, err
 		}
 		for _, alts := range p {
 			for index, alt := range alts {
 				count[alt] += evaluator(index, len(alts))
 			}
 		}
-		return
+		return count, nil
 	}
 }
 
@@ -203,10 +213,26 @@ func (a *Assert) Empty(got any) {
 	}
 }
 
-func Alts(alts ...int) []Alternative {
-	var alternatives []Alternative = make([]Alternative, len(alts))
-	for i, alt := range alts {
-		alternatives[i] = Alternative(alt)
-	}
-	return alternatives
+const (
+	ErrorAlreadyVoted       = http.StatusForbidden
+	ErrorVoterNotAllowed    = http.StatusUnauthorized
+	ErrorDeadline           = http.StatusGone
+	ErrorRuleNotImplemented = http.StatusNotImplemented
+)
+
+type HTTPError struct {
+	Code    int
+	Message string
+}
+
+func (e HTTPError) Error() string {
+	return e.Message
+}
+
+func (e HTTPError) StatusCode() int {
+	return e.Code
+}
+
+func HTTPErrorf(status int, message string, args ...any) HTTPError {
+	return HTTPError{status, fmt.Sprintf(message, args...)}
 }

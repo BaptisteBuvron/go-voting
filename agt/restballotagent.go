@@ -1,145 +1,101 @@
 package agt
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
+	"ia04/comsoc"
 	"log"
 	"net/http"
 	"sync"
 	"time"
 )
 
+// Server Agent for create BallotAgent
 type RestServerAgent struct {
 	sync.Mutex
-	id       string
-	reqCount int
-	addr     string
-	ballots  map[string]*BallotAgent
+	id      string
+	addr    string
+	ballots map[string]*BallotAgent
 }
 
+// Create RestServerAgent
 func NewRestServerAgent(addr string) *RestServerAgent {
 	ballots := make(map[string]*BallotAgent)
 	return &RestServerAgent{id: addr, addr: addr, ballots: ballots}
 }
 
-// Test de la méthode
-func checkMethod(method string, w http.ResponseWriter, r *http.Request) bool {
-	if r.Method != method {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		fmt.Fprintf(w, "method %q not allowed", r.Method)
-		return false
+// [POST] /new_ballot
+func (server *RestServerAgent) doNewBallot(req RequestNewBallot, res Response) error {
+	// We need to lock for being thread-safe
+	server.Lock()
+	defer server.Unlock()
+
+	// Try to create ballot
+	ballotAgent, err := NewBallotAgent(req.Rule, req.Deadline, req.Voters, req.Alternatives, req.TieBreak)
+	if err != nil {
+		return err
 	}
-	return true
-}
 
-type Request struct {
-	Operator string `json:"op"`
-	Args     [2]int `json:"args"`
-}
+	// Save ballot to server
+	server.ballots[ballotAgent.id] = ballotAgent
 
-func respondJSON(w http.ResponseWriter, statuscode int, value any) {
-	w.WriteHeader(statuscode)
-	w.Header().Set("Content-Type", "application/json")
-	serial, _ := json.Marshal(value)
-	w.Write(serial)
-}
-
-type Response = func(statuscode int, value any)
-
-// Create a request handler by deserialize the request and send it to the inner function
-func route[Request any](method string, do func(Request, Response)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Check if method is valid
-		if !checkMethod(method, w, r) {
-			respondJSON(w, http.StatusBadRequest, ResponseMessage{Message: fmt.Sprintf("Route support only %s", method)})
-			return
-		}
-		// Deserialize json
-		var request Request
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(r.Body)
-		err := json.Unmarshal(buf.Bytes(), &request)
-		if err != nil {
-			respondJSON(w, http.StatusBadRequest, ResponseMessage{Message: "Invalid body"})
-			return
-		}
-		// Run function
-		do(request, func(statuscode int, value any) {
-			respondJSON(w, statuscode, value)
-		})
-	}
-}
-
-func (rsa *RestServerAgent) doNewBallot(req RequestNewBallot, res Response) {
-	//verify if the request is valid
-	requestValid, err := isRequestNewBallotValid(req)
-	if !requestValid {
-		res(http.StatusBadRequest, ResponseMessage{Message: err.Error()})
-		return
-	}
-	rsa.Lock()
-	defer rsa.Unlock()
-	rsa.reqCount++
-	voteName := fmt.Sprintf("vote%d", rsa.reqCount)
-	ballotAgent := NewBallotAgent(req)
-	rsa.ballots[voteName] = ballotAgent
-	responseNewBallot := ResponseNewBallot{BallotID: voteName}
-	fmt.Println(voteName + " created")
+	// Reply for the ballot
+	responseNewBallot := ResponseNewBallot{BallotID: ballotAgent.id}
 	res(http.StatusCreated, responseNewBallot)
+	return nil
 }
 
-func (rsa *RestServerAgent) doVote(req RequestVote, res Response) {
-
-	//verify if the request is valid
-	requestValid, err := isRequestVoteValid(req)
-	if !requestValid {
-		res(http.StatusBadRequest, ResponseMessage{Message: err.Error()})
-		return
-	}
-
-	voteId := req.VoteID
-	ballotAgent, ok := rsa.ballots[voteId]
+// [POST] /vote
+func (server *RestServerAgent) doVote(req RequestVote, res Response) error {
+	// Get the ballot from server
+	ballotAgent, ok := server.ballots[req.BallotID]
 	if !ok {
-		res(http.StatusBadRequest, ResponseMessage{Message: fmt.Sprintf("Vote %s not found", voteId)})
-		return
+		return comsoc.HTTPErrorf(http.StatusNotFound, "Ballot %s not found", req.BallotID)
 	}
-	errAddVoter := ballotAgent.addVoter(req)
-	if errAddVoter.Code != 0 {
-		res(errAddVoter.Code, ResponseMessage{Message: errAddVoter.Error()})
-		return
+
+	// Add vote to ballot or raise error
+	err := ballotAgent.Vote(req.AgentID, req.Prefs, req.Options)
+	if err != nil {
+		return err
 	}
-	res(http.StatusOK, ResponseMessage{Message: ""})
+
+	// Send result
+	res(http.StatusOK, ResponseMessage{Message: "OK"})
+	return nil
 }
 
-func (rsa *RestServerAgent) doResult(req RequestResult, res Response) {
-
-	//verify if the request is valid
-	requestValid, err := isRequestResultValid(req)
-	if !requestValid {
-		res(http.StatusBadRequest, ResponseMessage{Message: err.Error()})
-		return
+// [POST] /result
+func (server *RestServerAgent) doResult(req RequestResult, res Response) error {
+	// Get the ballot from server
+	ballotAgent, ok := server.ballots[req.BallotID]
+	if !ok {
+		return comsoc.HTTPErrorf(http.StatusNotFound, "Ballot %s not found", req.BallotID)
 	}
 
-	res(http.StatusOK, ResponseMessage{Message: ""})
+	// Add vote to ballot or raise error
+	winner, err := ballotAgent.result()
+	if err != nil {
+		return err
+	}
+	res(http.StatusOK, ResponseResult{Winner: winner})
+	return nil
+
 }
 
-func (rsa *RestServerAgent) Start() {
-	// création du multiplexer
+func (server *RestServerAgent) Start() {
+	// Creation of the multiplexer
 	mux := http.NewServeMux()
-	mux.HandleFunc("/new_ballot", route("POST", rsa.doNewBallot))
-	mux.HandleFunc("/vote", route("POST", rsa.doVote))
-	mux.HandleFunc("/result", route("POST", rsa.doResult))
+	mux.HandleFunc("/new_ballot", route("POST", server.doNewBallot))
+	mux.HandleFunc("/vote", route("POST", server.doVote))
+	mux.HandleFunc("/result", route("POST", server.doResult))
 
-	// création du serveur http
+	// Creating the http server
 	s := &http.Server{
-		Addr:           rsa.addr,
+		Addr:           server.addr,
 		Handler:        mux,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20}
 
-	// lancement du serveur
-	log.Println("Listening on", rsa.addr)
+	// Server launch
+	log.Println("Listening on", server.addr)
 	go log.Fatal(s.ListenAndServe())
 }

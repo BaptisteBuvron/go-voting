@@ -17,7 +17,7 @@ func TestCondorcetWinner(t *testing.T) {
 	// 2 win against 1
 	bestAlts, err := CondorcetWinner(prefs1)
 	assert.NoError(err)
-	assert.DeepEqual(bestAlts, Alts(0))
+	assert.DeepEqual(bestAlts, []Alternative{0})
 
 	// No Condorcet Winner
 	prefs2 := Profile{

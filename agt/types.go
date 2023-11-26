@@ -4,6 +4,10 @@ import (
 	"ia04/comsoc"
 	"time"
 )
+import (
+	"fmt"
+	"time"
+)
 
 // Request for [POST] /new_ballot
 type RequestNewBallot struct {

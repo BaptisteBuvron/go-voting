@@ -1,7 +1,7 @@
 package agt
 
 import (
-	"ia04/comsoc"
+	"github.com/BaptisteBuvron/go-voting/comsoc"
 	"log"
 	"net/http"
 	"sync"

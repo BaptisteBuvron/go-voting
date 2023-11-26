@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"ia04/comsoc"
+	"github.com/BaptisteBuvron/go-voting/comsoc"
 	"log"
 	"net/http"
 	"os"

@@ -3,7 +3,7 @@ package agt
 import (
 	"crypto/rand"
 	"fmt"
-	"ia04/comsoc"
+	"github.com/BaptisteBuvron/go-voting/comsoc"
 	"log"
 	"math/big"
 	"net/http"

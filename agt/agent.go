@@ -2,7 +2,7 @@ package agt
 
 import (
 	"fmt"
-	"ia04/comsoc"
+	"github.com/BaptisteBuvron/go-voting/comsoc"
 	"reflect"
 )
 

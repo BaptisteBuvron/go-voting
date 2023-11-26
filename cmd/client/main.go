@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"ia04/agt"
+	"github.com/BaptisteBuvron/go-voting/agt"
 	"os"
 )
 

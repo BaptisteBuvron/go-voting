@@ -18,7 +18,7 @@ func TieBreakFirstOne(alts []Alternative) (Alternative, error) {
 }
 
 // Take the highest candidate (for be more determinist).
-func TieBreakHighest(alts []Alternative) (alt Alternative, err error) {
+func TieBreakHighest(alts []Alternative) (Alternative, error) {
 	if len(alts) == 0 {
 		return Alternative(-1), HTTPErrorf(http.StatusBadRequest, "Empty alternatives")
 	}
@@ -55,10 +55,10 @@ func TieBreakFactory(orderedAlts []Alternative) TieBreak {
 }
 
 // Social Welfare Function with tie break.
-type SWFWithTieBreak func(p Profile) (alts []Alternative, err error)
+type SWFWithTieBreak func(Profile) ([]Alternative, error)
 
 // Social Choice Function with tie break.
-type SCFWithTieBreak func(p Profile) (bestAlt Alternative, err error)
+type SCFWithTieBreak func(Profile) (Alternative, error)
 
 // SWFs must return a total order without ties
 func SWFFactory(swf SWF, tb TieBreak) SWFWithTieBreak {

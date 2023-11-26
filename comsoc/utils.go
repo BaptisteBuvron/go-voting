@@ -128,20 +128,19 @@ func WinAgainst(alt1 Alternative, alt2 Alternative, p Profile) bool {
 }
 
 // Social Welfare Function.
-type SWF func(p Profile) (count Count, err error)
+type SWF func(Profile) (Count, error)
 
 // Social Choice Function.
-type SCF func(p Profile) (bestAlts []Alternative, err error)
+type SCF func(Profile) ([]Alternative, error)
 
 // Transform a SWF into SCF.
 func SWF2SCF(swf SWF) SCF {
-	return func(p Profile) (bestAlts []Alternative, err error) {
+	return func(p Profile) ([]Alternative, error) {
 		count, err := swf(p)
 		if err != nil {
-			return
+			return nil, err
 		}
-		bestAlts = MaxCount(count)
-		return
+		return MaxCount(count), nil
 	}
 }
 
@@ -157,23 +156,23 @@ func CountFor(p Profile) Count {
 }
 
 // Function for evaluate score
-type ScoreEvaluator func(index int, size int) (score int)
+type ScoreEvaluator func(int, int) int
 
 // A voting method that gives points to the candidate based on their position in the ranking
 // ref: https://www.hds.utc.fr/~lagruesy/ens/ia04/02-Prise%20de%20d%c3%a9cision%20collective%20et%20th%c3%a9orie%20du%20choix%20social/#33
 func ScoringSWFFactory(evaluator ScoreEvaluator) SWF {
-	return func(p Profile) (count Count, err error) {
-		count = make(Count, 0)
-		err = CheckProfile(p)
+	return func(p Profile) (Count, error) {
+		count := make(Count, 0)
+		err := CheckProfile(p)
 		if err != nil {
-			return
+			return nil, err
 		}
 		for _, alts := range p {
 			for index, alt := range alts {
 				count[alt] += evaluator(index, len(alts))
 			}
 		}
-		return
+		return count, nil
 	}
 }
 

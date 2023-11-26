@@ -63,14 +63,14 @@ ruleIsImplemented:
 	if err != nil {
 		return nil, err
 	}
-	// generate unique time-based id
-	time := time.Now().UnixMilli()
+	// generate unique timestamp-based id
+	timestamp := time.Now().UnixMilli()
 	uniqueNumber, err := rand.Int(rand.Reader, big.NewInt(0xffff))
 	if err != nil {
 		log.Println(err) // do not show uncontrolled informations
 		return nil, comsoc.HTTPErrorf(http.StatusInternalServerError, "Can't generate id")
 	}
-	id := fmt.Sprintf("%s-%s", rule, strconv.FormatInt(time<<8+uniqueNumber.Int64(), 16))
+	id := fmt.Sprintf("%s-%s", rule, strconv.FormatInt(timestamp<<8+uniqueNumber.Int64(), 16))
 	// Map voters
 	mapVoters := make(map[string]bool)
 	for _, voter := range voters {
@@ -123,10 +123,10 @@ func (b *BallotAgent) Vote(voterId string, alts []comsoc.Alternative, options []
 }
 
 // Get the result of BallotAgent only after deadline
-func (b *BallotAgent) result() (comsoc.Alternative, error) {
+func (b *BallotAgent) result() (comsoc.Alternative, []comsoc.Alternative, error) {
 	// Check if vote is over
 	if b.deadline.After(time.Now()) {
-		return comsoc.Alternative(-1), comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline is not over come back at %v", b.deadline)
+		return comsoc.Alternative(-1), nil, comsoc.HTTPErrorf(http.StatusServiceUnavailable, "Deadline is not over come back at %v", b.deadline)
 	}
 	// Get scf
 	var scf comsoc.SCF
@@ -144,9 +144,13 @@ func (b *BallotAgent) result() (comsoc.Alternative, error) {
 	case "copeland":
 		scf = comsoc.CopelandSCF
 	}
-	// Use tieBreak
-	scfWithTieBreak := comsoc.SCFFactory(scf, b.tieBreak)
+	results, err := scf(b.profiles)
+	if err != nil {
+		return comsoc.Alternative(-1), nil, err
+	}
+	// apply tie break
+	winner, err := b.tieBreak(results)
 	// Get result
-	return scfWithTieBreak(b.profiles)
+	return winner, results, err
 
 }

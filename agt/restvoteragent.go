@@ -44,6 +44,6 @@ func (client *RestClientAgent) Result(ballotID string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 	} else {
-		fmt.Println(res.Winner)
+		fmt.Printf("Winner: %v\nRanking: %v\n", res.Winner, res.Ranking)
 	}
 }

@@ -34,7 +34,8 @@ type RequestResult struct {
 
 // Response for [POST] /result
 type ResponseResult struct {
-	Winner comsoc.Alternative `json:"winner"`
+	Winner  comsoc.Alternative   `json:"winner"`
+	Ranking []comsoc.Alternative `json:"ranking"`
 }
 
 // Generic response for message as error or /vote

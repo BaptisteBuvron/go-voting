@@ -7,7 +7,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:22
+      image: ubuntu:latest
       ports:
         - 8080
     steps:
